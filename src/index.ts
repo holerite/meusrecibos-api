@@ -1,21 +1,20 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
-import { db } from "./lib/db";
-import { fooTable } from "./schema/foo.schema";
-
-const result = await db.select().from(fooTable).all();
+import api from "./routes";
+import { logger } from "hono/logger";
+import { cors } from "hono/cors";
+import { prettyJSON } from "hono/pretty-json";
 
 const app = new Hono();
 
-app.get("/", (c) => {
-	return c.text("Hello Hono!");
-});
+app.use(prettyJSON());
+app.use(logger());
+app.use(cors());
 
-const port = 3000;
-console.log(`Server is running on port ${port}`);
+app.route("/api", api);
 
 serve({
 	fetch: app.fetch,
-	port,
+	port: Number(process.env.PORT) || 3000,
 });
