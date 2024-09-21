@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { zValidator } from "../lib/validator";
+import { zValidator } from "../middlewares/validator.middleware";
 import { sendToken } from "../controllers/email.controller";
 import { jwt } from "hono/jwt";
 import { handleError } from "../utils/error.util";
@@ -8,6 +8,8 @@ import * as pinController from "../controllers/pin.controller";
 import * as companyController from "../controllers/companies.controller";
 import * as authController from "../controllers/auth.controller";
 import * as authValidator from "../validators/auth.validator";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import { setCookie } from "hono/cookie";
 
 const auth = new Hono();
 
@@ -22,7 +24,7 @@ auth.post("/login", zValidator("json", authValidator.login), async (c) => {
 		if (process.env.NODE_ENV === "production") {
 			await sendToken(String(pin), email);
 		} else {
-			console.log({ pin });
+			return c.json({ token, pin });
 		}
 
 		return c.json({ token });
@@ -69,6 +71,8 @@ auth.post(
 
 			const result = await authController.login({ email, companyId });
 
+			setCookie(c, "refreshToken", result.refreshToken);
+
 			return c.json(result);
 		} catch (error) {
 			return handleError(c, error);
@@ -76,21 +80,15 @@ auth.post(
 	},
 );
 
-auth.post(
-	"/logout",
-	jwt({
-		secret: process.env.ACCESS_TOKEN_SECRET,
-	}),
-	async (c) => {
-		try {
-			const { id } = c.get("jwtPayload");
+auth.post("/logout", authMiddleware, async (c) => {
+	try {
+		const { id } = c.get("jwtPayload");
 
-			await authController.logout(id);
-			return c.json({ message: "Usuário deslogado com sucesso" }, 200);
-		} catch (error) {
-			return handleError(c, error);
-		}
-	},
-);
+		await authController.logout(id);
+		return c.json({ message: "Usuário deslogado com sucesso" }, 200);
+	} catch (error) {
+		return handleError(c, error);
+	}
+});
 
 export default auth;

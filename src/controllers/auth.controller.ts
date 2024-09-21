@@ -5,9 +5,7 @@ import { UserSchema } from "../schemas/user.schema";
 import { db } from "../lib/db";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
-
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+import * as datefns from "date-fns";
 
 type TokenPayload = {
 	id: number;
@@ -16,19 +14,41 @@ type TokenPayload = {
 	companyId: number;
 };
 
+enum TokenExpiration {
+	"30s" = 30,
+	"1m" = 60,
+	"15m" = 15 * 60,
+	"8h" = 8 * 60 * 60,
+}
+
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const ACCESS_TOKEN_EXP = TokenExpiration["1m"];
+const REFRESH_TOKEN_EXP = TokenExpiration["15m"];
+
 async function generateToken({
 	companyId,
 	user,
 	secret,
-	expires = "15m",
+	expires = ACCESS_TOKEN_EXP,
 }: {
 	user: { id: number; email: string };
 	companyId: number;
 	secret: string;
-	expires?: "30s" | "15m" | "8h";
+	expires?: TokenExpiration;
 }): Promise<string> {
 	return await jwt.sign(
-		{ id: user.id, email: user.email, expiresIn: expires, companyId },
+		{
+			id: user.id,
+			email: user.email,
+			exp:
+				datefns
+					.add(new Date(), {
+						seconds: expires,
+					})
+					.getTime() / 1000,
+			companyId,
+		},
 		secret,
 	);
 }
@@ -56,14 +76,14 @@ export async function login({
 		user,
 		companyId,
 		secret: ACCESS_TOKEN_SECRET,
-		expires: "30s",
+		expires: ACCESS_TOKEN_EXP,
 	});
 
 	const refreshToken = await generateToken({
 		user,
 		companyId,
 		secret: REFRESH_TOKEN_SECRET,
-		expires: "8h",
+		expires: REFRESH_TOKEN_EXP,
 	});
 
 	await db
@@ -132,7 +152,6 @@ export async function refreshToken({ refreshToken }: { refreshToken: string }) {
 			refreshToken,
 			REFRESH_TOKEN_SECRET,
 		)) as TokenPayload;
-		console.log("Payload:", payload);
 		const user = await db
 			.select()
 			.from(UserSchema)
@@ -150,13 +169,13 @@ export async function refreshToken({ refreshToken }: { refreshToken: string }) {
 			companyId: payload.companyId,
 			user: { id: user.id, email: user.email },
 			secret: ACCESS_TOKEN_SECRET,
-			expires: "30s",
+			expires: ACCESS_TOKEN_EXP,
 		});
 		const newRefreshToken = await generateToken({
 			companyId: payload.companyId,
 			user: { id: user.id, email: user.email },
 			secret: REFRESH_TOKEN_SECRET,
-			expires: "8h",
+			expires: REFRESH_TOKEN_EXP,
 		});
 
 		await db
