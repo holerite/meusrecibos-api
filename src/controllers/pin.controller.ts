@@ -7,13 +7,14 @@ import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import type { selectUserSchema } from "../schemas/user.schema";
 import type { z } from "zod";
+import { addMinutes } from "date-fns";
 
 export async function create(user: z.infer<typeof selectUserSchema>) {
 	const pin = Math.floor(100000 + Math.random() * 900000);
 
 	const uuid = randomUUID();
 
-	const token = await sign({ uuid, email: user.email }, process.env.JWT_SECRET);
+	const token = await sign({ uuid, email: user.email, exp: Math.floor(addMinutes(new Date(), 5).getTime() / 1000) }, process.env.JWT_SECRET);
 
 	await db.delete(PinSchema).where(eq(PinSchema.userId, user.id));
 

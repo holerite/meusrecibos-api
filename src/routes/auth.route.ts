@@ -11,7 +11,15 @@ import * as authValidator from "../validators/auth.validator";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { setCookie } from "hono/cookie";
 
-const auth = new Hono();
+type Variables = {
+	user: {
+		id: number;
+		email: string;
+		companyId: number;
+	}
+  }
+  
+const auth = new Hono<{ Variables: Variables }>();
 
 auth.post("/login", zValidator("json", authValidator.login), async (c) => {
 	try {
@@ -82,7 +90,7 @@ auth.post(
 
 auth.post("/logout", authMiddleware, async (c) => {
 	try {
-		const { id } = c.get("jwtPayload");
+		const { id } = c.get("user");
 
 		await authController.logout(id);
 		return c.json({ message: "Usuário deslogado com sucesso" }, 200);
