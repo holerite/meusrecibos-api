@@ -38,6 +38,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: Load secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          # Export loaded secrets as environment variables
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          WATCHTOWER: op://MeusRecibos/WATCHTOWER_HTTP_API_TOKEN/password
+  
       - name: Build compose on server
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.WATCHTOWER_HTTP_API_TOKEN }}" https://wtr.fluma.dev/v1/update
+          curl -H "Authorization: Bearer ${{ steps.load-secret.outputs.WATCHTOWER }}" https://wtr.fluma.dev/v1/update
