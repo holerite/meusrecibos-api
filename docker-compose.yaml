@@ -10,6 +10,8 @@ services:
       - ".env"
   api:
     image: ghcr.io/holerite/meusrecibos-api:release
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
     env_file:
       - ".env"
@@ -25,3 +27,14 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - api
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --debug --http-api-update
+    environment:
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_HTTP_API_TOKEN}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    ports:
+      - 8080:8080
