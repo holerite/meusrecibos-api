@@ -19,8 +19,8 @@ app.use(logger(customLogger));
 
 app.route("/api", api);
 
-app.get("health", c => {
-	return c.json({ message: "ok" })
+app.get("/", c => {
+	return c.json({ message: "ok", date: new Date().toISOString() })
 })
 
 serve({
