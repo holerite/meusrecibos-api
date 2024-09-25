@@ -39,8 +39,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       - name: Build compose on server
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: 'https://wtr.fluma.dev/v1/update'
-          method: 'GET'
-          bearerToken: ${{ secrets.WATCHTOWER_HTTP_API_TOKEN }}
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.WATCHTOWER_HTTP_API_TOKEN }}" localhost:8080/v1/update
