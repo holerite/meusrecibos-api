@@ -21,6 +21,7 @@ services:
       mode: replicated
       replicas: 3
   nginx:
+    container_name: nginx
     image: nginx:latest
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
@@ -32,6 +33,7 @@ services:
     depends_on:
       - api
   watchtower:
+    container_name: watchtower
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
