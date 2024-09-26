@@ -6,6 +6,7 @@ import { db } from "../lib/db";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import * as datefns from "date-fns";
+import { SystemRoutesSchema } from "../schemas/system-routes.schema";
 
 type TokenPayload = {
 	id: number;
@@ -86,6 +87,12 @@ export async function login({
 		expires: REFRESH_TOKEN_EXP,
 	});
 
+	const routes = await db.select({
+		id: SystemRoutesSchema.id,
+		name: SystemRoutesSchema.name,
+		href: SystemRoutesSchema.route
+	}).from(SystemRoutesSchema).where(eq(SystemRoutesSchema.active, true))
+
 	await db
 		.update(UserSchema)
 		.set({
@@ -102,6 +109,7 @@ export async function login({
 			id: user.id,
 			name: user.name,
 			email: user.email,
+			routes: routes
 		},
 	};
 }

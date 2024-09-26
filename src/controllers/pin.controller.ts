@@ -14,7 +14,7 @@ export async function create(user: z.infer<typeof selectUserSchema>) {
 
 	const uuid = randomUUID();
 
-	const token = await sign({ uuid, email: user.email, exp: Math.floor(addMinutes(new Date(), 5).getTime() / 1000) }, process.env.JWT_SECRET);
+	const token = await sign({ uuid, email: user.email, id: user.id, exp: Math.floor(addMinutes(new Date(), 5).getTime() / 1000) }, process.env.JWT_SECRET);
 
 	await db.delete(PinSchema).where(eq(PinSchema.userId, user.id));
 
@@ -28,13 +28,12 @@ export async function create(user: z.infer<typeof selectUserSchema>) {
 	};
 }
 
-export async function validate(userId: number, pin: string, uuid: string) {
+export async function validate(pin: string, uuid: string) {
 	const result = await db
 		.select()
 		.from(PinSchema)
 		.where(
 			and(
-				eq(PinSchema.userId, userId),
 				eq(PinSchema.pin, pin),
 				eq(PinSchema.id, uuid),
 			),
@@ -48,5 +47,5 @@ export async function validate(userId: number, pin: string, uuid: string) {
 
 	await db
 		.delete(PinSchema)
-		.where(and(eq(PinSchema.userId, userId), eq(PinSchema.pin, pin)));
+		.where(and(eq(PinSchema.pin, pin)));
 }

@@ -49,14 +49,14 @@ auth.post(
 	}),
 	async (c) => {
 		try {
-			const { pin, userId } = c.req.valid("json");
-			const { uuid } = c.get("jwtPayload");
+			const { pin } = c.req.valid("json");
+			const { uuid, id } = c.get("jwtPayload");
 
 			if (process.env.NODE_ENV === "production") {
-				await pinController.validate(userId, pin, uuid);
+				await pinController.validate(pin, uuid);
 			}
 
-			const companies = await companyController.get(userId);
+			const companies = await companyController.get(id);
 
 			return c.json({ companies });
 		} catch (error) {
