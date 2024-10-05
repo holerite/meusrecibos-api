@@ -11,15 +11,7 @@ import * as authValidator from "../validators/auth.validator";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { setCookie } from "hono/cookie";
 
-type Variables = {
-	user: {
-		id: number;
-		email: string;
-		companyId: number;
-	}
-  }
-  
-const auth = new Hono<{ Variables: Variables }>();
+const auth = new Hono();
 
 auth.post("/login", zValidator("json", authValidator.login), async (c) => {
 	try {
