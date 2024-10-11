@@ -1,12 +1,12 @@
 import "dotenv/config";
 import { eq, sql } from "drizzle-orm";
 import * as jwt from "hono/jwt";
-import { UserSchema } from "../schemas/user.schema";
-import { db } from "../lib/db";
+// import { UserSchema } from "../schemas/user.schema";
+import { db, prisma } from "../lib/db";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import * as datefns from "date-fns";
-import { SystemRoutesSchema } from "../schemas/system-routes.schema";
+// import { SystemRoutesSchema } from "../schemas/system-routes.schema";
 
 type TokenPayload = {
 	id: number;
@@ -61,11 +61,11 @@ export async function login({
 	email: string;
 	companyId: number;
 }) {
-	const user = await db
-		.select()
-		.from(UserSchema)
-		.where(eq(UserSchema.email, email))
-		.get();
+	const user = await prisma.user.findUnique({
+		where: {
+			email,
+		},
+	});
 
 	if (!user) {
 		throw new HTTPException(HTTPCode.UNAUTHORIZED, {
@@ -87,19 +87,21 @@ export async function login({
 		expires: REFRESH_TOKEN_EXP,
 	});
 
-	const routes = await db.select({
-		id: SystemRoutesSchema.id,
-		name: SystemRoutesSchema.name,
-		href: SystemRoutesSchema.route
-	}).from(SystemRoutesSchema).where(eq(SystemRoutesSchema.active, true))
+	const routes = await prisma.systemRoutes.findMany({
+		where: {
+			active: true
+		},
+	})
 
-	await db
-		.update(UserSchema)
-		.set({
-			refreshToken: refreshToken,
-			refreshTokenExpiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours now
-		})
-		.where(eq(UserSchema.id, user.id));
+	await prisma.user.update({
+		data: {
+			refresh_token: refreshToken,
+			refresh_token_expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000)
+		},
+		where: {
+			id: user.id
+		}
+	})
 
 	return {
 		accessToken,
@@ -109,49 +111,23 @@ export async function login({
 			id: user.id,
 			name: user.name,
 			email: user.email,
-			routes: routes
+			routes: routes,
 		},
 	};
 }
 
 export async function logout(id: number) {
-	await db
-		.update(UserSchema)
-		.set({
-			refreshToken: null,
-			refreshTokenExpiresAt: null,
-		})
-		.where(eq(UserSchema.id, id));
+	await prisma.user.update({
+		data: {
+			refresh_token: null,
+			refresh_token_expires_at: null
+		},
+		where: {
+			id,
+		}
+	})
 
 	return { message: "Logout successful" };
-}
-
-export async function register({
-	name,
-	email,
-}: {
-	name: string;
-	email: string;
-	password: string;
-}) {
-	try {
-		await db
-			.insert(UserSchema)
-			.values({
-				name: name,
-				email: email,
-				refreshToken: null,
-				refreshTokenExpiresAt: null,
-			})
-			.returning();
-
-		return {
-			message: "User registered successfully",
-		};
-	} catch (error) {
-		console.error("Registration error:", error);
-		return { message: "An error occurred during registration" };
-	}
 }
 
 export async function refreshToken({ refreshToken }: { refreshToken: string }) {
@@ -160,16 +136,16 @@ export async function refreshToken({ refreshToken }: { refreshToken: string }) {
 			refreshToken,
 			REFRESH_TOKEN_SECRET,
 		)) as TokenPayload;
-		const user = await db
-			.select()
-			.from(UserSchema)
-			.where(
-				sql`${eq(UserSchema.id, payload.id)} AND ${eq(UserSchema.refreshToken, refreshToken)}`,
-			)
-			.get();
+
+		const user = await prisma.user.findUnique({
+			where: {
+				id: payload.id,
+				refresh_token: refreshToken
+			}
+		})
 
 		// biome-ignore lint/style/noNonNullAssertion: <explanation>
-		if (!user || new Date(user.refreshTokenExpiresAt!) < new Date()) {
+		if (!user || new Date(user.refresh_token_expires_at!) < new Date()) {
 			return { message: "Invalid or expired refresh token" };
 		}
 
@@ -186,13 +162,15 @@ export async function refreshToken({ refreshToken }: { refreshToken: string }) {
 			expires: REFRESH_TOKEN_EXP,
 		});
 
-		await db
-			.update(UserSchema)
-			.set({
-				refreshToken: newRefreshToken,
-				refreshTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-			})
-			.where(eq(UserSchema.id, user.id));
+		await prisma.user.update({
+			data: {
+				refresh_token: newRefreshToken,
+				refresh_token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+			},
+			where: {
+				id: user.id
+			}
+		})
 
 		return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 	} catch (error) {

@@ -48,7 +48,7 @@ auth.post(
 				await pinController.validate(pin, uuid);
 			}
 
-			const companies = await companyController.get(id);
+			const companies = await companyController.getByUserId(id);
 
 			return c.json({ companies });
 		} catch (error) {
@@ -75,6 +75,7 @@ auth.post(
 
 			return c.json(result);
 		} catch (error) {
+			console.log(error)
 			return handleError(c, error);
 		}
 	},

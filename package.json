@@ -11,6 +11,8 @@
   "dependencies": {
     "@hono/node-server": "^1.13.0",
     "@libsql/client": "^0.12.0",
+    "@prisma/adapter-libsql": "^5.20.0",
+    "@prisma/client": "5.20.0",
     "@sentry/cli": "^2.36.2",
     "@sentry/node": "^8.31.0",
     "@sentry/profiling-node": "^8.31.0",
@@ -32,6 +34,7 @@
     "@types/pdf-parse": "^1.1.4",
     "drizzle-kit": "^0.24.2",
     "pkgroll": "^2.5.0",
+    "prisma": "5.20.0",
     "tsx": "^4.7.1"
   },
   "exports": "./dist/index.mjs",

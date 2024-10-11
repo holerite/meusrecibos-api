@@ -1,20 +1,19 @@
-import { eq } from "drizzle-orm";
-import { db } from "../lib/db";
-import { UserSchema } from "../schemas/user.schema";
 import { HTTPException } from "hono/http-exception";
+import { prisma } from "../lib/db";
 import { HTTPCode } from "../utils/http";
 
 export async function getByEmail(email: string) {
-	const result = await db
-		.select()
-		.from(UserSchema)
-		.where(eq(UserSchema.email, email));
+	const result = await prisma.user.findUnique({
+		where: {
+			email: email,
+		},
+	});
 
-	if (result.length === 0) {
+	if (result === null) {
 		throw new HTTPException(HTTPCode.NOT_FOUND, {
-			message: "Usuário não encontrado",
+			message: "Usuário inválido",
 		});
 	}
 
-	return result[0];
+	return result
 }

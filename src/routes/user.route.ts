@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import { prisma } from "../lib/db";
 
 type Variables = {
 	user: User;
@@ -16,6 +17,6 @@ userRoute.get("/", async (c) => {
 	} catch (e) {
 		return c.json({ message: "Error", e }, 500);
 	}
-});
+});	
 
 export default userRoute;

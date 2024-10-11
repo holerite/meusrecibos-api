@@ -7,8 +7,8 @@ import employeesRoute from "./employees.route";
 const api = new Hono();
 
 api.route("/auth", auth);
-api.route("/user", userRoute);
-api.route("/receipt", receiptRoute);
+// api.route("/user", userRoute);
 api.route("/employees", employeesRoute);
+// api.route("/receipt", receiptRoute);
 
 export default api;
