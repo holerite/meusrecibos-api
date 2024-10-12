@@ -28,7 +28,11 @@ export async function getEmployees({companyId, nome, email, matricula}: getEmplo
 		include: {
 			_count: {
 				select: {
-					Receipts: true
+					Receipts: {
+						where: {
+							companyId: companyId
+						}
+					}
 				}
 			}
 		}

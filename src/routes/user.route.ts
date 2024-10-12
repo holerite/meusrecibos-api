@@ -1,22 +1,35 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { prisma } from "../lib/db";
+import { deleteUser, getAll } from "../controllers/user.controller";
+import { handleError } from "../utils/error.util";
 
-type Variables = {
-	user: User;
-};
-
-const userRoute = new Hono<{ Variables: Variables }>();
+const userRoute = new Hono();
 
 userRoute.use(authMiddleware);
 
 userRoute.get("/", async (c) => {
 	try {
-		const teste = c.get("user");
-		return c.json({ message: teste });
+		const { companyId } = c.get("user");
+
+		const users = await getAll(companyId);
+
+		return c.json(users);
 	} catch (e) {
-		return c.json({ message: "Error", e }, 500);
+		return handleError(c, e);
 	}
-});	
+});
+
+userRoute.delete("/:id", async (c) => {
+	try {
+		const userId = c.req.param("id");
+		const { companyId } = c.get("user");
+
+		await deleteUser(companyId, Number(userId));
+
+		return c.json({ message: "Usuário removido com sucesso" });
+	} catch (error) {
+		return handleError(c, e);
+	}
+});
 
 export default userRoute;
