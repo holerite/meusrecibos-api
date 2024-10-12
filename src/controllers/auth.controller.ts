@@ -21,8 +21,8 @@ enum TokenExpiration {
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-const ACCESS_TOKEN_EXP = TokenExpiration["1m"];
-const REFRESH_TOKEN_EXP = TokenExpiration["15m"];
+const ACCESS_TOKEN_EXP = TokenExpiration["8h"];
+const REFRESH_TOKEN_EXP = TokenExpiration["8h"];
 
 async function generateToken({
 	companyId,

@@ -71,8 +71,6 @@ auth.post(
 
 			const result = await authController.login({ email, companyId });
 
-			setCookie(c, "refreshToken", result.refreshToken);
-
 			return c.json(result);
 		} catch (error) {
 			console.log(error)
