@@ -19,16 +19,20 @@ export async function getByEmail(email: User["email"]) {
 	return result;
 }
 
-
 /**
- * @param companyId 
+ * @param companyId
  */
-export async function getAll(companyId: number) {
+export async function getAll(companyId: number, userId: User["id"]) {
 	const result = await prisma.user.findMany({
 		where: {
 			Companies: {
 				some: {
 					id: companyId,
+				},
+			},
+			AND: {
+				id: {
+					not: userId,
 				},
 			},
 		},
@@ -45,13 +49,16 @@ export async function getAll(companyId: number) {
 
 /**
  *
- * @param companyId 
+ * @param companyId
  * ID da empresa
  * @param userId
  * ID do usuário
  * @returns null
  */
-export async function deleteUser(companyId: Company["id"], userId: User["id"]): Promise<null> {
+export async function deleteUser(
+	companyId: Company["id"],
+	userId: User["id"],
+): Promise<null> {
 	await prisma.user.update({
 		data: {
 			Companies: {
@@ -64,5 +71,33 @@ export async function deleteUser(companyId: Company["id"], userId: User["id"]): 
 			id: userId,
 		},
 	});
-	return null
+	return null;
+}
+
+export async function addUser(
+	email: User["email"],
+	name: User["name"],
+	companyId: Company["id"],
+) {
+	await prisma.user.upsert({
+		create: {
+			email,
+			name,
+			Companies: {
+				connect: {
+					id: companyId,
+				}
+			}
+		},
+		update: {
+			 Companies: {
+				connect: {
+					id: companyId
+				}
+			 }
+		},
+		where: {
+			email,
+		}
+	});
 }
