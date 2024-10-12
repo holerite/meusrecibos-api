@@ -1,12 +1,9 @@
 import "dotenv/config";
-import { eq, sql } from "drizzle-orm";
 import * as jwt from "hono/jwt";
-// import { UserSchema } from "../schemas/user.schema";
-import { db, prisma } from "../lib/db";
+import { prisma } from "../lib/db";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import * as datefns from "date-fns";
-// import { SystemRoutesSchema } from "../schemas/system-routes.schema";
 
 type TokenPayload = {
 	id: number;
@@ -171,6 +168,7 @@ export async function refreshToken({ refreshToken }: { refreshToken: string }) {
 				id: user.id
 			}
 		})
+
 
 		return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 	} catch (error) {

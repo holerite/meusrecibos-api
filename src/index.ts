@@ -19,11 +19,15 @@ app.use(logger(customLogger));
 
 app.route("/api", api);
 
-app.get("/", c => {
-	return c.json({ message: "ok", date: new Date().toISOString() })
-})
-
-serve({
-	fetch: app.fetch,
-	port: Number(process.env.PORT) || 8080,
-});
+serve(
+	{
+		fetch: app.fetch,
+		port: Number(process.env.PORT) || 8080,
+	},
+	async ({ port, address, family }) => {
+		console.log(
+			`Server is running on ${port} at ${address} with ${family} family`,
+		);
+		console.log(`http://localhost:${port}`);
+	},
+);
