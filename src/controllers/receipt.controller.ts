@@ -50,11 +50,7 @@ export async function getReceipts({
 	}
 
 	if (filter.type) {
-		query.receiptType = {
-			some: {
-				id: Number(filter.type),
-			},
-		};
+		query.receiptsTypesId = Number(filter.type);
 	}
 
 	const receipts = await prisma.receipts.findMany({
