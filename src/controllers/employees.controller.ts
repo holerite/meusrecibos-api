@@ -4,7 +4,6 @@ import type {
 	createEmployeeSchema,
 	getEmployeeSchema,
 } from "../types/employee.type";
-import { Employee, Prisma } from "@prisma/client";
 
 type getEmployeesDto = {
 	companyId: number;

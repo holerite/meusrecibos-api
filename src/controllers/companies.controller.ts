@@ -1,4 +1,3 @@
-import { eq, sql } from "drizzle-orm";
 import { prisma } from "../lib/db";
 
 export async function getByUserId(userId: number) {

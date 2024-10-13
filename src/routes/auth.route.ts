@@ -9,7 +9,6 @@ import * as companyController from "../controllers/companies.controller";
 import * as authController from "../controllers/auth.controller";
 import * as authValidator from "../validators/auth.validator";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { setCookie } from "hono/cookie";
 
 const auth = new Hono();
 

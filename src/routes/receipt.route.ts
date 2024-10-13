@@ -7,7 +7,10 @@ import pdf from "pdf-parse";
 import {
 	createReceipt,
 	createReceiptSchema,
+	createReceiptType,
+	createReceiptTypeSchema,
 	getReceipts,
+	getTypes,
 	receiptsFilterSchema,
 	type GetReceiptsFilterDto,
 } from "../controllers/receipt.controller";
@@ -50,7 +53,7 @@ receiptRoute.use(authMiddleware);
 receiptRoute.post("/", zValidator("json", createReceiptSchema), async (c) => {
 	try {
 		const { companyId } = c.get("user");
-		const data = c.req.valid("json")
+		const data = c.req.valid("json");
 
 		await createReceipt({
 			companyId,
@@ -63,17 +66,46 @@ receiptRoute.post("/", zValidator("json", createReceiptSchema), async (c) => {
 	}
 });
 
-receiptRoute.get("/", zValidator("query", receiptsFilterSchema) ,async (c) => {
+receiptRoute.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
 	try {
 		const { companyId } = c.get("user");
 		const params = c.req.valid("query");
 
-		const receipts = await getReceipts({companyId, ...params});
+		const receipts = await getReceipts({ companyId, ...params });
 
 		return c.json(receipts);
 	} catch (error) {
 		return handleError(c, error);
 	}
 });
+
+receiptRoute.get("/type", async (c) => {
+	try {
+		const { companyId } = c.get("user");
+
+		const types = await getTypes(companyId);
+
+		return c.json(types);
+	} catch (error) {
+		return handleError(c, error);
+	}
+});
+
+receiptRoute.post(
+	"/type",
+	zValidator("json", createReceiptTypeSchema),
+	async (c) => {
+		try {
+			const { companyId } = c.get("user");
+			const { name } = c.req.valid("json");
+
+			const types = await createReceiptType({ companyId, name });
+
+			return c.json(types);
+		} catch (error) {
+			return handleError(c, error);
+		}
+	},
+);
 
 export default receiptRoute;

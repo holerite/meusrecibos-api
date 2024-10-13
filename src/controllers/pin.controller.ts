@@ -1,10 +1,8 @@
 import { prisma } from "../lib/db";
 import { randomUUID } from "node:crypto";
 import { sign } from "hono/jwt";
-import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
-import type { z } from "zod";
 import { addMinutes } from "date-fns";
 
 export async function create(user: any) {

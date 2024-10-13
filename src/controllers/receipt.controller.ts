@@ -1,7 +1,8 @@
-import type { Company, Employee, ReceiptsTypes } from "@prisma/client";
+import type { Company } from "@prisma/client";
 import { prisma } from "../lib/db";
-import { string, z } from "zod";
-import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import { HTTPException } from "hono/http-exception";
+import { HTTPCode } from "../utils/http";
 
 export const receiptsFilterSchema = z.object({
 	employee: z.string().optional(),
@@ -144,6 +145,51 @@ export async function createReceipt({
 					data: details,
 				},
 			},
+		},
+	});
+}
+
+export async function getTypes(companyId: Company["id"]) {
+	return await prisma.receiptsTypes.findMany({
+		where: {
+			companyId,
+		},
+		select: {
+			name: true,
+			id: true,
+		},
+	});
+}
+
+export const createReceiptTypeSchema = z.object({
+	name: z.string({
+		message: "O nome do tipo é obrigatório",
+	}),
+});
+
+type createTypeDto = {
+	companyId: Company["id"];
+} & z.infer<typeof createReceiptTypeSchema>;
+
+export async function createReceiptType({ name, companyId }: createTypeDto) {
+
+	const existingType = await prisma.receiptsTypes.findFirst({
+		where: {
+			companyId,
+			name,
+		}
+	})
+
+	if (existingType) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "O tipo de recibo já existe"
+		})
+	}
+
+	return await prisma.receiptsTypes.create({
+		data: {
+			name,
+			companyId,
 		},
 	});
 }
