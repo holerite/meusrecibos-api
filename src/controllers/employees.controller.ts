@@ -1,10 +1,15 @@
 import type { z } from "zod";
 import { prisma } from "../lib/db";
-import type { getEmployeeSchema } from "../types/employee.type";
+import type { createEmployeeSchema, getEmployeeSchema } from "../types/employee.type";
+import { Prisma } from "@prisma/client";
 
 type getEmployeesDto = {
 	companyId: number;
 } & z.infer<typeof getEmployeeSchema>;
+
+type createEmployeeDto = {
+	companyId: number,
+} & z.infer<typeof createEmployeeSchema>
 
 export async function getEmployees({
 	companyId,
@@ -14,6 +19,7 @@ export async function getEmployees({
 	take,
 	page,
 }: getEmployeesDto) {
+
 	const employees = await prisma.employee.findMany({
 		where: {
 			name: {
@@ -22,16 +28,26 @@ export async function getEmployees({
 			email: {
 				contains: email,
 			},
-			enrolment: {
-				contains: matricula,
-			},
-			Companies: {
+			EmployeeEnrolment: {
 				some: {
-					id: companyId,
+					enrolment: {
+						contains: matricula,
+					},
+					AND: {
+						companyId,
+					},
 				},
 			},
 		},
 		include: {
+			EmployeeEnrolment: {
+				where: {
+					companyId,
+				},
+				select: {
+					enrolment: true,
+				},
+			},
 			_count: {
 				select: {
 					Receipts: {
@@ -50,21 +66,61 @@ export async function getEmployees({
 		_count: {
 			_all: true,
 		},
+		where: {
+			EmployeeEnrolment: {
+				some: {
+					companyId,
+				}
+			}
+		}
 	});
 
 	const total_records = aggregate._count._all;
-	const total_pages = total_records / (Number(take) || 1)
-	const next_page = Number(page) + 1 === total_pages ? null : Number(page) + 1
-	const prev_page = Number(page) === 0 ? null :  Number(page) - 1
+	const total_pages = Math.ceil(total_records / (Number(take) || 1))
+	const next_page = Number(page) + 1 === total_pages ? null : Number(page) + 1;
+	const prev_page = Number(page) === 0 ? null : Number(page) - 1;
 
 	return {
-		employees,
+		employees: employees.map(({ EmployeeEnrolment, _count, ...employee }) => {
+			return {
+				enrolment: EmployeeEnrolment[0].enrolment,
+				...employee,
+				receipts: _count.Receipts,
+			};
+		}),
 		pagination: {
 			total_records,
 			total_pages,
 			current_page: page,
 			next_page,
-			prev_page
+			prev_page,
 		},
 	};
+}
+
+
+export async function createEmployee({email, name, enrolment, companyId} :createEmployeeDto) {
+	await prisma.employee.upsert({
+		where: {
+			email: email,
+		},
+		create: {
+				email,
+				name,
+				EmployeeEnrolment: {
+					create: {
+						enrolment,
+						companyId,
+					}
+				}
+		},
+		update: {
+			EmployeeEnrolment: {
+				create: {
+					enrolment,
+					companyId,
+				}
+			}
+		}
+	})
 }
