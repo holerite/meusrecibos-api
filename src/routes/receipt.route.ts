@@ -1,15 +1,21 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { zValidator } from "../middlewares/validator.middleware";
-import { createReceiptSchema } from "../validators/receipt.validator";
 import PDFParser from "pdf2json";
 import fs from "node:fs";
 import pdf from "pdf-parse";
-import { getReceipts, type GetReceiptsFilterDto } from "../controllers/receipt.controller";
+import {
+	createReceipt,
+	createReceiptSchema,
+	getReceipts,
+	receiptsFilterSchema,
+	type GetReceiptsFilterDto,
+} from "../controllers/receipt.controller";
+import { handleError } from "../utils/error.util";
 
 const receiptRoute = new Hono();
 
-// receiptRoute.use(authMiddleware);
+receiptRoute.use(authMiddleware);
 
 // receiptRoute.post("/", async (c) => {
 // 	// const { companyId } = c.get("user");
@@ -41,15 +47,32 @@ const receiptRoute = new Hono();
 // 	return c.json({ message: "Recibo criado com sucesso" });
 // });
 
-receiptRoute.get("/", async (c) => {
+receiptRoute.post("/", zValidator("json", createReceiptSchema), async (c) => {
 	try {
-		const { companyId } = c.get("user")
-		const params = c.req.query() as GetReceiptsFilterDto
-		const receipts = await getReceipts({companyId, ...params})
+		const { companyId } = c.get("user");
+		const data = c.req.valid("json")
 
-		return c.json(receipts)
+		await createReceipt({
+			companyId,
+			...data,
+		});
+
+		return c.json({ message: "recibo cadastrado com sucesso" });
 	} catch (error) {
-		
+		return handleError(c, error);
+	}
+});
+
+receiptRoute.get("/", zValidator("query", receiptsFilterSchema) ,async (c) => {
+	try {
+		const { companyId } = c.get("user");
+		const params = c.req.valid("query");
+
+		const receipts = await getReceipts({companyId, ...params});
+
+		return c.json(receipts);
+	} catch (error) {
+		return handleError(c, error);
 	}
 });
 

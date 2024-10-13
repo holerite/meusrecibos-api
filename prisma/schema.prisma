@@ -34,6 +34,9 @@ model Employee {
   email             String              @unique
   name              String
   cpf               String              @unique
+  admission         DateTime?
+  position          String?
+  cbo               String?
   Receipts          Receipts[]
   EmployeeEnrolment EmployeeEnrolment[]
 }
@@ -48,20 +51,42 @@ model EmployeeEnrolment {
 }
 
 model Receipts {
-  id              Int           @id @default(autoincrement())
-  opened          Boolean       @default(false)
-  payday          DateTime?
-  validity        DateTime?
+  id                     Int       @id @default(autoincrement())
+  opened                 Boolean   @default(false)
+  payday                 DateTime?
+  validity               DateTime?
+  baseWage               Int?
+  contributionSalaryINSS Int?
+  baseSalaryFGTS         Int?
+  FGTS                   Int?
+  IRRF                   Int?
+  totalWage              Int?
+  liquidWage             Int?
+
+  receiptDetails ReceiptDetails[]
+
   employee        Employee      @relation(fields: [employeeId], references: [id])
   employeeId      Int
   company         Company       @relation(fields: [companyId], references: [id])
   companyId       Int
-  type            ReceiptsTypes @relation(fields: [receiptsTypesId], references: [id])
-  receiptsTypesId String
+  ReceiptsTypes   ReceiptsTypes @relation(fields: [receiptsTypesId], references: [id])
+  receiptsTypesId Int
+}
+
+model ReceiptDetails {
+  id          Int     @id @default(autoincrement())
+  code        String?
+  description String?
+  reference   Int?
+  salary      Int?
+  discounts   Int?
+
+  Receipts   Receipts? @relation(fields: [receiptsId], references: [id])
+  receiptsId Int?
 }
 
 model ReceiptsTypes {
-  id        String     @id @default(uuid())
+  id        Int        @id @default(autoincrement())
   name      String
   company   Company    @relation(fields: [companyId], references: [id])
   companyId Int

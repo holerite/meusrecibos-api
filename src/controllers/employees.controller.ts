@@ -4,7 +4,7 @@ import type {
 	createEmployeeSchema,
 	getEmployeeSchema,
 } from "../types/employee.type";
-import { Prisma } from "@prisma/client";
+import { Employee, Prisma } from "@prisma/client";
 
 type getEmployeesDto = {
 	companyId: number;
@@ -19,27 +19,36 @@ export async function getEmployees({
 	nome,
 	email,
 	matricula,
+	cpf,
 	take,
 	page,
 }: getEmployeesDto) {
-	const employees = await prisma.employee.findMany({
-		where: {
-			name: {
-				contains: nome,
-			},
-			email: {
-				contains: email,
-			},
-			EmployeeEnrolment: {
-				some: {
-					enrolment: {
-						contains: matricula,
-					},
-					AND: {
-						companyId,
-					},
+
+	const filter= {
+		name: {
+			contains: nome,
+		},
+		email: {
+			contains: email,
+		},
+		cpf: {
+			contains: cpf,
+		},
+		EmployeeEnrolment: {
+			some: {
+				enrolment: {
+					contains: matricula,
+				},
+				AND: {
+					companyId,
 				},
 			},
+		},
+	}
+
+	const employees = await prisma.employee.findMany({
+		where: {
+			...filter
 		},
 		include: {
 			EmployeeEnrolment: {
@@ -69,22 +78,7 @@ export async function getEmployees({
 			_all: true,
 		},
 		where: {
-			name: {
-				contains: nome,
-			},
-			email: {
-				contains: email,
-			},
-			EmployeeEnrolment: {
-				some: {
-					enrolment: {
-						contains: matricula,
-					},
-					AND: {
-						companyId,
-					},
-				},
-			},
+			...filter
 		},
 	});
 

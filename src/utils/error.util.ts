@@ -5,6 +5,7 @@ import { captureException,  } from "@sentry/node";
 import { Prisma } from "@prisma/client";
 
 export function handleError(c: Context, error: any) {
+	console.log(error)
 	if (process.env.NODE_ENV === "production") {
 		captureException(error);
 	}

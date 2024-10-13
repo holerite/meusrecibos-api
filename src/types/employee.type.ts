@@ -4,6 +4,7 @@ export const getEmployeeSchema = z.object({
 	matricula: z.string().optional(),
 	nome: z.string().optional(),
 	email: z.string().optional(),
+	cpf: z.string().optional(),
 	take: z
 		.string({
 			message: "Items por página é obrigatório",
