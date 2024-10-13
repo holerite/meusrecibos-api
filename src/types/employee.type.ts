@@ -30,5 +30,8 @@ export const createEmployeeSchema = z.object({
 	}),
 	enrolment: z.string({
 		message: "A matrícula do colaborador é obrigatória"
+	}),
+	cpf: z.string({
+		message: "O cpf do colaborador é obrigatório"
 	})
 })

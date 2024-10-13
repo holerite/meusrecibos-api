@@ -33,6 +33,7 @@ model Employee {
   id                Int                 @id @default(autoincrement())
   email             String              @unique
   name              String
+  cpf               String              @unique
   Receipts          Receipts[]
   EmployeeEnrolment EmployeeEnrolment[]
 }
@@ -40,10 +41,10 @@ model Employee {
 model EmployeeEnrolment {
   id         Int      @id @default(autoincrement())
   enrolment  String
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId Int
   companyId  Int
-  company    Company  @relation(fields: [companyId], references: [id])
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model Receipts {

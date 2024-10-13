@@ -115,15 +115,17 @@ export async function createEmployee({
 	email,
 	name,
 	enrolment,
+	cpf,
 	companyId,
 }: createEmployeeDto) {
 	await prisma.employee.upsert({
 		where: {
-			email: email,
+			cpf,
 		},
 		create: {
 			email,
 			name,
+			cpf,
 			EmployeeEnrolment: {
 				create: {
 					enrolment,

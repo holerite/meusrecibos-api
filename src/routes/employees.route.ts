@@ -32,15 +32,19 @@ employeesRoute.post(
 	"/",
 	zValidator("json", createEmployeeSchema),
 	async (c) => {
-		const { companyId } = c.get("user");
-		const employee = c.req.valid("json");
+		try {
+			const { companyId } = c.get("user");
+			const employee = c.req.valid("json");
 
-		await createEmployee({
-			...employee,
-			companyId: companyId,
-		});
+			await createEmployee({
+				...employee,
+				companyId: companyId,
+			});
 
-		return c.json({ message: "Colaborador criado com sucesso" });
+			return c.json({ message: "Colaborador criado com sucesso" });
+		} catch (error) {
+			return handleError(c, error)
+		}
 	},
 );
 
