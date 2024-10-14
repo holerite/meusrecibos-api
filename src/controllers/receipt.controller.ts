@@ -172,24 +172,48 @@ type createTypeDto = {
 } & z.infer<typeof createReceiptTypeSchema>;
 
 export async function createReceiptType({ name, companyId }: createTypeDto) {
-
 	const existingType = await prisma.receiptsTypes.findFirst({
 		where: {
 			companyId,
 			name,
-		}
-	})
+		},
+	});
 
 	if (existingType) {
 		throw new HTTPException(HTTPCode.BAD_REQUEST, {
-			message: "O tipo de recibo já existe"
-		})
+			message: "O tipo de recibo já existe",
+		});
 	}
 
 	return await prisma.receiptsTypes.create({
 		data: {
 			name,
 			companyId,
+		},
+	});
+}
+
+export const updateTypeSchema = z.object({
+	name: z.string(),
+	id: z.number(),
+});
+
+type updateReceiptTypeDto = {
+	companyId: Company["id"];
+} & z.infer<typeof updateTypeSchema>;
+
+export async function updateReceiptType({
+	companyId,
+	id,
+	name,
+}: updateReceiptTypeDto) {
+	await prisma.receiptsTypes.update({
+		data: {
+			companyId,
+			name,
+		},
+		where: {
+			id,
 		},
 	});
 }

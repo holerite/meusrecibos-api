@@ -12,6 +12,8 @@ import {
 	getReceipts,
 	getTypes,
 	receiptsFilterSchema,
+	updateReceiptType,
+	updateTypeSchema,
 	type GetReceiptsFilterDto,
 } from "../controllers/receipt.controller";
 import { handleError } from "../utils/error.util";
@@ -107,5 +109,21 @@ receiptRoute.post(
 		}
 	},
 );
+
+receiptRoute.put("/type", zValidator("json", updateTypeSchema), async (c) => {
+	try {
+		const { companyId } = c.get("user");
+		const { id, name } = c.req.valid("json");
+		await updateReceiptType({
+			companyId,
+			name,
+			id,
+		});
+
+		return c.json({ message: "Tipo de recibo editado com sucesso" });
+	} catch (error) {
+		return handleError(c, error);
+	}
+});
 
 export default receiptRoute;
