@@ -18,9 +18,9 @@ import {
 } from "../controllers/receipt.controller";
 import { handleError } from "../utils/error.util";
 
-const receiptRoute = new Hono();
+const app = new Hono();
 
-receiptRoute.use(authMiddleware);
+app.use(authMiddleware);
 
 // receiptRoute.post("/", async (c) => {
 // 	// const { companyId } = c.get("user");
@@ -52,7 +52,7 @@ receiptRoute.use(authMiddleware);
 // 	return c.json({ message: "Recibo criado com sucesso" });
 // });
 
-receiptRoute.post("/", zValidator("json", createReceiptSchema), async (c) => {
+app.post("/", zValidator("json", createReceiptSchema), async (c) => {
 	try {
 		const { companyId } = c.get("user");
 		const data = c.req.valid("json");
@@ -68,7 +68,7 @@ receiptRoute.post("/", zValidator("json", createReceiptSchema), async (c) => {
 	}
 });
 
-receiptRoute.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
+app.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
 	try {
 		const { companyId } = c.get("user");
 		const params = c.req.valid("query");
@@ -81,7 +81,7 @@ receiptRoute.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
 	}
 });
 
-receiptRoute.get("/type", async (c) => {
+app.get("/type", async (c) => {
 	try {
 		const { companyId } = c.get("user");
 
@@ -93,7 +93,7 @@ receiptRoute.get("/type", async (c) => {
 	}
 });
 
-receiptRoute.post(
+app.post(
 	"/type",
 	zValidator("json", createReceiptTypeSchema),
 	async (c) => {
@@ -110,7 +110,7 @@ receiptRoute.post(
 	},
 );
 
-receiptRoute.put("/type", zValidator("json", updateTypeSchema), async (c) => {
+app.put("/type", zValidator("json", updateTypeSchema), async (c) => {
 	try {
 		const { companyId } = c.get("user");
 		const { id, name } = c.req.valid("json");
@@ -126,4 +126,4 @@ receiptRoute.put("/type", zValidator("json", updateTypeSchema), async (c) => {
 	}
 });
 
-export default receiptRoute;
+export default app;

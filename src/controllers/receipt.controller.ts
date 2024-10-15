@@ -3,6 +3,14 @@ import { prisma } from "../lib/db";
 import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
+import {
+	addHours,
+	lastDayOfMonth,
+	setDate,
+	setDay,
+	setHours,
+	subHours,
+} from "date-fns";
 
 export const receiptsFilterSchema = z.object({
 	employee: z.string().optional(),
@@ -31,6 +39,7 @@ export async function getReceipts({
 	page,
 	...filter
 }: GetReceiptsDto) {
+
 	const query: any = {
 		company: {
 			id: companyId,
@@ -40,22 +49,34 @@ export async function getReceipts({
 				contains: filter.employee,
 			},
 		},
-		payday: {
-			gte: filter.paydayFrom,
-			lte: filter.paydayTo,
-		},
+		
 	};
 
+	if(filter.paydayFrom && filter.paydayTo) {
+		query.payday = {
+			gte: setHours(filter.paydayFrom, 0),
+			lte: setHours(filter.paydayTo, 23)
+		}
+	}
+
 	if (filter.opened !== undefined) {
-		query.opened = Boolean(filter.opened);
+		query.opened = JSON.parse(filter.opened);
+	}
+
+	if (filter.validity) {
+		query.validity = {
+			gte: subHours(setDate(filter.validity, 1), 3),
+			lte: subHours(lastDayOfMonth(filter.validity), 3),
+		};
 	}
 
 	if (filter.type) {
 		query.receiptsTypesId = Number(filter.type);
 	}
 
+
 	const receipts = await prisma.receipts.findMany({
-		where: query,
+		where:query,
 		select: {
 			employee: {
 				select: {
@@ -70,6 +91,11 @@ export async function getReceipts({
 			payday: true,
 			validity: true,
 			opened: true,
+		},
+		orderBy: {
+			payday: {
+				sort: "desc",
+			},
 		},
 		take: Number(take),
 		skip: Number(take) * Number(page),
@@ -110,11 +136,13 @@ export const ReceiptDetailSchema = z.object({
 });
 
 export const createReceiptSchema = z.object({
-	employeeId: z.number(),
-	payday: z.string().optional(),
-	validity: z.string().optional(),
-	opened: z.boolean().optional(),
 	type: z.number(),
+	validity: z.date(),
+	payday: z.date(),
+	file: z.string(),
+	
+	employeeId: z.number().optional(),
+	opened: z.boolean().optional(),
 	baseWage: z.number().optional(),
 	contributionSalaryINSS: z.number().optional(),
 	baseSalaryFGTS: z.number().optional(),
@@ -138,6 +166,7 @@ export async function createReceipt({
 	await prisma.receipts.create({
 		data: {
 			...rest,
+			employeeId: 1,
 			companyId,
 			receiptsTypesId: type,
 			receiptDetails: {
@@ -162,9 +191,11 @@ export async function getTypes(companyId: Company["id"]) {
 }
 
 export const createReceiptTypeSchema = z.object({
-	name: z.string({
-		message: "O nome do tipo é obrigatório",
-	}),
+	name: z
+		.string({
+			message: "O nome do tipo é obrigatório",
+		})
+		.min(1),
 });
 
 type createTypeDto = {
