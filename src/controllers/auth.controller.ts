@@ -64,6 +64,12 @@ export async function login({
 		},
 	});
 
+	const company = await prisma.company.findUnique({
+		where: {
+			id: companyId,
+		},
+	});
+
 	if (!user) {
 		throw new HTTPException(HTTPCode.UNAUTHORIZED, {
 			message: "Credenciais inválidas",
@@ -105,6 +111,7 @@ export async function login({
 		refreshToken,
 		user: {
 			companyId: companyId,
+			companyName: company?.name,
 			id: user.id,
 			name: user.name,
 			email: user.email,
