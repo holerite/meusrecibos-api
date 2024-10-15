@@ -4,10 +4,8 @@ import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import {
-	addHours,
 	lastDayOfMonth,
 	setDate,
-	setDay,
 	setHours,
 	subHours,
 } from "date-fns";
@@ -137,20 +135,20 @@ export const ReceiptDetailSchema = z.object({
 
 export const createReceiptSchema = z.object({
 	type: z.number(),
-	validity: z.date(),
-	payday: z.date(),
+	validity: z.string(),
+	payday: z.string(),
 	file: z.string(),
 	
-	employeeId: z.number().optional(),
-	opened: z.boolean().optional(),
-	baseWage: z.number().optional(),
-	contributionSalaryINSS: z.number().optional(),
-	baseSalaryFGTS: z.number().optional(),
-	FGTS: z.number().optional(),
-	IRRF: z.number().optional(),
-	totalWage: z.number().optional(),
-	liquidWage: z.number().optional(),
-	details: z.array(ReceiptDetailSchema),
+	// employeeId: z.number().optional(),
+	// opened: z.boolean().optional(),
+	// baseWage: z.number().optional(),
+	// contributionSalaryINSS: z.number().optional(),
+	// baseSalaryFGTS: z.number().optional(),
+	// FGTS: z.number().optional(),
+	// IRRF: z.number().optional(),
+	// totalWage: z.number().optional(),
+	// liquidWage: z.number().optional(),
+	// details: z.array(ReceiptDetailSchema).optional(),
 });
 
 type CreateReceiptDto = {
@@ -160,20 +158,16 @@ type CreateReceiptDto = {
 export async function createReceipt({
 	companyId,
 	type,
-	details,
+	file,
 	...rest
 }: CreateReceiptDto) {
 	await prisma.receipts.create({
 		data: {
-			...rest,
-			employeeId: 1,
+			validity: new Date(rest.validity),
+			payday: new Date(rest.payday),
+			employeeId: 27,
 			companyId,
 			receiptsTypesId: type,
-			receiptDetails: {
-				createMany: {
-					data: details,
-				},
-			},
 		},
 	});
 }

@@ -1,6 +1,5 @@
 {
 	"name": "meusrecibos-api",
-	"type": "module",
 	"scripts": {
 		"dev": "tsx watch src/index.ts",
 		"build": "pkgroll --minify",
@@ -21,6 +20,7 @@
 		"drizzle-zod": "^0.5.1",
 		"hono": "^4.6.2",
 		"pdf-parse": "^1.1.1",
+		"pdf.js-extract": "^0.2.1",
 		"pdf2json": "^3.1.4",
 		"resend": "^4.0.0",
 		"zod": "^3.23.8"

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { zValidator } from "../middlewares/validator.middleware";
 import PDFParser from "pdf2json";
-import fs from "node:fs";
+import { PDFExtract } from 'pdf.js-extract'
 import pdf from "pdf-parse";
 import {
 	createReceipt,
@@ -17,40 +17,94 @@ import {
 	type GetReceiptsFilterDto,
 } from "../controllers/receipt.controller";
 import { handleError } from "../utils/error.util";
+import { z } from "zod";
 
 const app = new Hono();
 
 app.use(authMiddleware);
 
-// receiptRoute.post("/", async (c) => {
-// 	// const { companyId } = c.get("user");
+type textContent = {
+	items: {
+		str: string
+		dir: string
+		width: number
+		height: number
+		transform: number[],
+		fontName: string
+	  }[],
+	  styles: any
+}
 
-// 	const data = await c.req.formData();
-// 	const file = data.get("recibo");
+function getCoordinates(pageData) {
+    //check documents https://mozilla.github.io/pdf.js/
+    const render_options = {
+        //replaces all occurrences of whitespace with standard spaces (0x20). The default value is `false`.
+        normalizeWhitespace: false,
+        //do not attempt to combine same line TextItem's. The default value is `false`.
+        disableCombineTextItems: false
+    }
 
-// 	if (!file) {
-// 		return c.json({ message: "O arquivo não foi enviado" }, 400);
-// 	}
+ 
+    return pageData.getTextContent(render_options)
+    .then((textContent: textContent) => {
+		console.log({textContent})
+		const teste = []
+		for (let item of textContent.items) {
+			const val = {
+				y: item.transform[5],
+				x: item.transform[4],
+				value: item.str
+			}
+			teste.push(val)
+        }
+        return JSON.stringify(teste);
+    });
+}
+ 
+// TODO: 
+async function getPages(pageData) {
+    //check documents https://mozilla.github.io/pdf.js/
+    const render_options = {
+        //replaces all occurrences of whitespace with standard spaces (0x20). The default value is `false`.
+        normalizeWhitespace: false,
+        //do not attempt to combine same line TextItem's. The default value is `false`.
+        disableCombineTextItems: false
+    }
 
-// 	const buffer = await (file as File).arrayBuffer();
+	console.log("---")
+    const pagina = await pageData.getTextContent(render_options)
+    .then((textContent: any) => {
+		const teste = []
+		for (let item of textContent.items) {
+			const val = {
+				y: item.transform[5],
+				x: item.transform[4],
+				value: item.str
+			}
+			teste.push(val)
+        }
+        return teste
+    });
+	console.log({pagina})
 
-// 	pdf(Buffer.from(buffer)).then((data) => {
-// 		console.log(data);
-// 	});
+	return pagina
+}
 
-// 	// const { validity } = c.req.valid("json");
+const testSchem = z.object({
+	file: z.string(),
+});
 
-// 	// await db.insert(ReceitpSchema).values({
-// 	// 	opened: false,
-// 	// 	employee: 1,
-// 	// 	company: companyId,
-// 	// 	payday: new Date(),
-// 	// 	type: "Salário Normal",
-// 	// 	validity: new Date(validity.year, Number(validity.month) - 1, 1),
-// 	// });
+app.post("/details", zValidator("json", testSchem), async (c) => {
+	const { file } = c.req.valid("json");
 
-// 	return c.json({ message: "Recibo criado com sucesso" });
-// });
+	const buffer = Buffer.from(Uint8Array.from(atob(file), (c) => c.charCodeAt(0)))
+
+	const data = await pdf(Buffer.from(buffer), {
+		pagerender: (c) =>  getPages(c)
+	})
+
+	return c.json({  data: data.text });
+});
 
 app.post("/", zValidator("json", createReceiptSchema), async (c) => {
 	try {
@@ -93,22 +147,18 @@ app.get("/type", async (c) => {
 	}
 });
 
-app.post(
-	"/type",
-	zValidator("json", createReceiptTypeSchema),
-	async (c) => {
-		try {
-			const { companyId } = c.get("user");
-			const { name } = c.req.valid("json");
+app.post("/type", zValidator("json", createReceiptTypeSchema), async (c) => {
+	try {
+		const { companyId } = c.get("user");
+		const { name } = c.req.valid("json");
 
-			const types = await createReceiptType({ companyId, name });
+		const types = await createReceiptType({ companyId, name });
 
-			return c.json(types);
-		} catch (error) {
-			return handleError(c, error);
-		}
-	},
-);
+		return c.json(types);
+	} catch (error) {
+		return handleError(c, error);
+	}
+});
 
 app.put("/type", zValidator("json", updateTypeSchema), async (c) => {
 	try {

@@ -11,6 +11,7 @@ datasource db {
 model Company {
   id                Int                 @id @default(autoincrement())
   name              String
+  config            String?
   Users             User[]
   Receipts          Receipts[]
   ReceiptsTypes     ReceiptsTypes[]

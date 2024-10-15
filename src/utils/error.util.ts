@@ -5,13 +5,14 @@ import { captureException,  } from "@sentry/node";
 import { Prisma } from "@prisma/client";
 
 export function handleError(c: Context, error: any) {
-	console.log(error)
 	if (process.env.NODE_ENV === "production") {
 		captureException(error);
 	}
 
+	console.log(error)
+
 	if (error instanceof Prisma.PrismaClientKnownRequestError || error instanceof Prisma.PrismaClientValidationError ) {
-			return c.json({ message: error.message }, HTTPCode.BAD_REQUEST);
+			return c.json({ message: error.message, error }, HTTPCode.BAD_REQUEST);
 	}
 
 	if (error instanceof HTTPException) {
