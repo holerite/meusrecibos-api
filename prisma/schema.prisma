@@ -26,20 +26,21 @@ model User {
   refresh_token_expires_at DateTime?
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @default(now())
-  Pin                      Pin?
   Companies                Company[]
 }
 
 model Employee {
-  id                Int                 @id @default(autoincrement())
-  email             String              @unique
-  name              String
-  cpf               String              @unique
-  admission         DateTime?
-  position          String?
-  cbo               String?
-  Receipts          Receipts[]
-  EmployeeEnrolment EmployeeEnrolment[]
+  id                       Int                 @id @default(autoincrement())
+  email                    String              @unique
+  name                     String
+  cpf                      String              @unique
+  admission                DateTime?
+  position                 String?
+  cbo                      String?
+  refresh_token            String?
+  refresh_token_expires_at DateTime?
+  Receipts                 Receipts[]
+  EmployeeEnrolment        EmployeeEnrolment[]
 }
 
 model EmployeeEnrolment {
@@ -95,15 +96,15 @@ model ReceiptsTypes {
 }
 
 model Pin {
-  id     String @id @default(uuid())
-  user   User   @relation(fields: [userId], references: [id])
-  userId Int    @unique
-  pin    String
+  id      String @id @default(uuid())
+  pin     String
+  loginId Int?   @unique
 }
 
 model SystemRoutes {
-  id     Int     @id @default(autoincrement())
-  name   String
-  route  String
-  active Boolean
+  id           Int     @id @default(autoincrement())
+  name         String
+  route        String
+  active       Boolean
+  clientAccess Boolean @default(false)
 }

@@ -22,18 +22,14 @@ export async function create(user: any) {
 
 	await prisma.pin.upsert({
 		create: {
-			user: {
-				connect: {
-					id: user.id,
-				},
-			},
+			loginId: user.id,
 			pin: String(pin),
 		},
 		update: {
 			pin: String(pin),
 		},
 		where: {
-			userId: user.id,
+			loginId: user.id,
 		},
 	});
 
@@ -44,8 +40,6 @@ export async function create(user: any) {
 }
 
 export async function validate(pin: string, uuid: string) {
-
-	console.log(pin, uuid)
 	
 	const result = await prisma.pin.findUnique({
 		where: {
@@ -53,9 +47,6 @@ export async function validate(pin: string, uuid: string) {
 			id: uuid
 		}
 	})
-
-	console.log(pin, uuid)
-
 	
 	if (result === null) {
 		throw new HTTPException(HTTPCode.NOT_FOUND, {

@@ -4,6 +4,12 @@ import type {
 	createEmployeeSchema,
 	getEmployeeSchema,
 } from "../types/employee.type";
+import { HTTPException } from "hono/http-exception";
+import { HTTPCode } from "../utils/http";
+import { Employee, EmployeeEnrolment } from "@prisma/client";
+import { randomUUID } from "crypto";
+import { sign } from "hono/jwt";
+import { addMinutes } from "date-fns";
 
 type getEmployeesDto = {
 	companyId: number;
@@ -135,4 +141,34 @@ export async function createEmployee({
 			},
 		},
 	});
+}
+
+export async function getByEmail(email: Employee["email"]) {
+	const result = await prisma.employee.findUnique({
+		where: {
+			email: email,
+		},
+	});
+
+	if (result === null) {
+		throw new HTTPException(HTTPCode.NOT_FOUND, {
+			message: "Usuário inválido",
+		});
+	}
+
+	return result;
+}
+
+
+export async function saveUserToken (refreshToken: string, employee: Employee) {
+	await prisma.employee.update({
+		data: {
+			refresh_token: refreshToken,
+			refresh_token_expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000)
+		},
+		where: {
+			id: employee.id
+		}
+	})
+
 }
