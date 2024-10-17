@@ -29,7 +29,7 @@ export type GetReceiptsFilterDto = z.infer<typeof receiptsFilterSchema>;
 
 type GetReceiptsDto = {
 	companyId: Company["id"];
-	isUser: boolean;
+	isAdmin: boolean;
 	userId: number;
 } & GetReceiptsFilterDto;
 
@@ -37,7 +37,7 @@ export async function getReceipts({
 	companyId,
 	take,
 	page,
-	isUser,
+	isAdmin,
 	userId,
 	...filter
 }: GetReceiptsDto) {
@@ -76,7 +76,7 @@ export async function getReceipts({
 		query.receiptsTypesId = Number(filter.type);
 	}
 
-	if (!isUser) {
+	if (!isAdmin) {
 		query.employeeId = userId;
 	}
 

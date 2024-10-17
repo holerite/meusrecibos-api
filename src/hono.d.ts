@@ -6,7 +6,7 @@ declare module "hono" {
 			id: number;
 			email: string;
 			companyId: number;
-			isUser: boolean;
+			isAdmin: boolean;
 		};
 	}
 }

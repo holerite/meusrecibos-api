@@ -127,12 +127,12 @@ app.post("/", zValidator("json", createReceiptSchema), async (c) => {
 
 app.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
   try {
-    const { companyId, isUser, id } = c.get("user");
+    const { companyId, isAdmin, id } = c.get("user");
     const params = c.req.valid("query");
 
     const receipts = await getReceipts({
       companyId,
-      isUser,
+      isAdmin,
       userId: id,
       ...params,
     });

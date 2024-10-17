@@ -11,7 +11,7 @@ type TokenPayload = {
   email: string;
   expiresIn: string;
   companyId: number;
-  isUser: boolean;
+  isAdmin: boolean;
 };
 
 enum TokenExpiration {
@@ -29,13 +29,13 @@ const REFRESH_TOKEN_EXP = TokenExpiration["8h"];
 async function generateToken({
   companyId,
   user,
-  isUser,
+  isAdmin,
   secret,
   expires = ACCESS_TOKEN_EXP,
 }: {
   user: User | Employee;
   companyId: number;
-  isUser: boolean;
+  isAdmin: boolean;
   secret: string;
   expires?: TokenExpiration;
 }): Promise<string> {
@@ -43,7 +43,7 @@ async function generateToken({
     {
       id: user.id,
       email: user.email,
-      isUser,
+      isAdmin,
       exp:
         datefns
           .add(new Date(), {
@@ -59,11 +59,11 @@ async function generateToken({
 export async function login({
   user,
   companyId,
-  isUser,
+  isAdmin,
 }: {
   user: User | Employee;
   companyId: number;
-  isUser: boolean;
+  isAdmin: boolean;
 }) {
   const company = await prisma.company.findUnique({
     where: {
@@ -80,7 +80,7 @@ export async function login({
   const accessToken = await generateToken({
     user,
     companyId,
-    isUser,
+    isAdmin,
     secret: ACCESS_TOKEN_SECRET,
     expires: ACCESS_TOKEN_EXP,
   });
@@ -88,7 +88,7 @@ export async function login({
   const refreshToken = await generateToken({
     user,
     companyId,
-    isUser,
+    isAdmin,
     secret: REFRESH_TOKEN_SECRET,
     expires: REFRESH_TOKEN_EXP,
   });
@@ -105,6 +105,7 @@ export async function login({
     user: {
       companyId: companyId,
       companyName: company?.name,
+      isAdmin, 
       id: user.id,
       name: user.name,
       email: user.email,
@@ -144,11 +145,11 @@ export async function logout(id: number) {
 export async function refreshToken({
   refreshToken,
   user,
-  isUser
+  isAdmin
 }: {
   refreshToken: string;
   user: User;
-  isUser: boolean;
+  isAdmin: boolean;
 }) {
   try {
     const payload = (await jwt.verify(
@@ -164,14 +165,14 @@ export async function refreshToken({
     const newAccessToken = await generateToken({
       companyId: payload.companyId,
       user,
-      isUser,
+      isAdmin,
       secret: ACCESS_TOKEN_SECRET,
       expires: ACCESS_TOKEN_EXP,
     });
     const newRefreshToken = await generateToken({
       companyId: payload.companyId,
       user,
-      isUser,
+      isAdmin,
       secret: REFRESH_TOKEN_SECRET,
       expires: REFRESH_TOKEN_EXP,
     });
