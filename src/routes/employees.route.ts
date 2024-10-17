@@ -118,7 +118,7 @@ employeesRoute.post(
 
 	  const routes = await authController.getSystemRoutes("employee");
 
-      const result = await authController.login({ user, companyId });
+      const result = await authController.login({ user, companyId, isUser: false });
 
 	  await saveUserToken(result.accessToken, user);
 	

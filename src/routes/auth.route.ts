@@ -69,7 +69,7 @@ auth.post(
       const { email } = c.get("jwtPayload");
       const user = await userController.getByEmail(email);
 
-      const result = await authController.login({ user, companyId });
+      const result = await authController.login({ user, companyId, isUser: true });
 	
 	  const routes = await authController.getSystemRoutes("user");
 
