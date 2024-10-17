@@ -1,7 +1,6 @@
 import { prisma } from "../lib/db";
 
 export async function getByUserId(userId: number) {
-  console.log(userId);
   const result = await prisma.company.findMany({
     where: {
       Users: {
@@ -12,7 +11,6 @@ export async function getByUserId(userId: number) {
     },
   });
 
-  console.log(result);
 
   return result;
 }
@@ -37,7 +35,6 @@ export async function getByEmployeeId(employeeId: number) {
     id: enrolment.company.id,
   }));
 
-  console.log(companies);
 
   return companies;
 }
