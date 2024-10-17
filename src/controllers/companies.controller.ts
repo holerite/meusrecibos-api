@@ -24,8 +24,6 @@ export async function getByEmployeeId(employeeId: number) {
 	const enrolment = await prisma.employeeEnrolment.findMany({
 		where: {
 			employeeId
-		}, select: {
-			company: true
 		}
 	})
 
