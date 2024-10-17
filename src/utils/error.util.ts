@@ -1,13 +1,9 @@
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
-import { captureException,  } from "@sentry/node";
 import { Prisma } from "@prisma/client";
 
 export function handleError(c: Context, error: any) {
-	if (process.env.NODE_ENV === "production") {
-		captureException(error);
-	}
 
 	console.log(error)
 

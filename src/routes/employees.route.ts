@@ -30,7 +30,6 @@ employeesRoute.get("/", authMiddleware, zValidator("query", getEmployeeSchema), 
     const employees = await getEmployees({ companyId, ...query });
     return c.json(employees, 200);
   } catch (error) {
-    console.log(error);
     return handleError(c, error);
   }
 });
