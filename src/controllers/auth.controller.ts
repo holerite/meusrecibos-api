@@ -11,6 +11,7 @@ type TokenPayload = {
   email: string;
   expiresIn: string;
   companyId: number;
+  isUser: boolean;
 };
 
 enum TokenExpiration {
@@ -28,11 +29,13 @@ const REFRESH_TOKEN_EXP = TokenExpiration["8h"];
 async function generateToken({
   companyId,
   user,
+  isUser,
   secret,
   expires = ACCESS_TOKEN_EXP,
 }: {
   user: User | Employee;
   companyId: number;
+  isUser: boolean;
   secret: string;
   expires?: TokenExpiration;
 }): Promise<string> {
@@ -40,6 +43,7 @@ async function generateToken({
     {
       id: user.id,
       email: user.email,
+      isUser,
       exp:
         datefns
           .add(new Date(), {
@@ -55,9 +59,11 @@ async function generateToken({
 export async function login({
   user,
   companyId,
+  isUser,
 }: {
   user: User | Employee;
   companyId: number;
+  isUser: boolean;
 }) {
   const company = await prisma.company.findUnique({
     where: {
@@ -74,6 +80,7 @@ export async function login({
   const accessToken = await generateToken({
     user,
     companyId,
+    isUser,
     secret: ACCESS_TOKEN_SECRET,
     expires: ACCESS_TOKEN_EXP,
   });
@@ -81,6 +88,7 @@ export async function login({
   const refreshToken = await generateToken({
     user,
     companyId,
+    isUser,
     secret: REFRESH_TOKEN_SECRET,
     expires: REFRESH_TOKEN_EXP,
   });
@@ -136,14 +144,16 @@ export async function logout(id: number) {
 export async function refreshToken({
   refreshToken,
   user,
+  isUser
 }: {
   refreshToken: string;
   user: User;
+  isUser: boolean;
 }) {
   try {
     const payload = (await jwt.verify(
       refreshToken,
-      REFRESH_TOKEN_SECRET
+      REFRESH_TOKEN_SECRET,
     )) as TokenPayload;
 
     // biome-ignore lint/style/noNonNullAssertion: <explanation>
@@ -154,12 +164,14 @@ export async function refreshToken({
     const newAccessToken = await generateToken({
       companyId: payload.companyId,
       user,
+      isUser,
       secret: ACCESS_TOKEN_SECRET,
       expires: ACCESS_TOKEN_EXP,
     });
     const newRefreshToken = await generateToken({
       companyId: payload.companyId,
       user,
+      isUser,
       secret: REFRESH_TOKEN_SECRET,
       expires: REFRESH_TOKEN_EXP,
     });

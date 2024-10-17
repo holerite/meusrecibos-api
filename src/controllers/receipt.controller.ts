@@ -29,12 +29,16 @@ export type GetReceiptsFilterDto = z.infer<typeof receiptsFilterSchema>;
 
 type GetReceiptsDto = {
 	companyId: Company["id"];
+	isUser: boolean;
+	userId: number;
 } & GetReceiptsFilterDto;
 
 export async function getReceipts({
 	companyId,
 	take,
 	page,
+	isUser,
+	userId,
 	...filter
 }: GetReceiptsDto) {
 
@@ -72,6 +76,9 @@ export async function getReceipts({
 		query.receiptsTypesId = Number(filter.type);
 	}
 
+	if (!isUser) {
+		query.employeeId = userId;
+	}
 
 	const receipts = await prisma.receipts.findMany({
 		where:query,
