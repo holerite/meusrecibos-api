@@ -57,34 +57,14 @@ model Receipts {
   opened                 Boolean   @default(false)
   payday                 DateTime?
   validity               DateTime?
-  baseWage               Int?
-  contributionSalaryINSS Int?
-  baseSalaryFGTS         Int?
-  FGTS                   Int?
-  IRRF                   Int?
-  totalWage              Int?
-  liquidWage             Int?
+  file                   String
 
-  receiptDetails ReceiptDetails[]
-
-  employee        Employee      @relation(fields: [employeeId], references: [id])
+ employee        Employee      @relation(fields: [employeeId], references: [id])
   employeeId      Int
   company         Company       @relation(fields: [companyId], references: [id])
   companyId       Int
   ReceiptsTypes   ReceiptsTypes @relation(fields: [receiptsTypesId], references: [id])
   receiptsTypesId Int
-}
-
-model ReceiptDetails {
-  id          Int     @id @default(autoincrement())
-  code        String?
-  description String?
-  reference   Int?
-  salary      Int?
-  discounts   Int?
-
-  Receipts   Receipts? @relation(fields: [receiptsId], references: [id])
-  receiptsId Int?
 }
 
 model ReceiptsTypes {

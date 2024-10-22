@@ -3,12 +3,17 @@ import { prisma } from "../lib/db";
 import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
-import {
-	lastDayOfMonth,
-	setDate,
-	setHours,
-	subHours,
-} from "date-fns";
+import { lastDayOfMonth, setDate, setHours, subHours } from "date-fns";
+import { PDFDocument } from "pdf-lib";
+import { Buffer } from "node:buffer";
+import pdf from "pdf-parse";
+import { Readable } from "node:stream";
+import { Upload } from "@aws-sdk/lib-storage";
+import { PutObjectCommandInput } from "@aws-sdk/client-s3";
+import process from "node:process";
+import { randomUUID } from "node:crypto";
+import { S3 } from "../lib/s3.ts";
+import fs from "node:fs";
 
 export const receiptsFilterSchema = z.object({
 	employee: z.string().optional(),
@@ -41,7 +46,6 @@ export async function getReceipts({
 	userId,
 	...filter
 }: GetReceiptsDto) {
-
 	const query: any = {
 		company: {
 			id: companyId,
@@ -51,14 +55,13 @@ export async function getReceipts({
 				contains: filter.employee,
 			},
 		},
-		
 	};
 
-	if(filter.paydayFrom && filter.paydayTo) {
+	if (filter.paydayFrom && filter.paydayTo) {
 		query.payday = {
 			gte: setHours(filter.paydayFrom, 0),
-			lte: setHours(filter.paydayTo, 23)
-		}
+			lte: setHours(filter.paydayTo, 23),
+		};
 	}
 
 	if (filter.opened !== undefined) {
@@ -81,7 +84,7 @@ export async function getReceipts({
 	}
 
 	const receipts = await prisma.receipts.findMany({
-		where:query,
+		where: query,
 		select: {
 			employee: {
 				select: {
@@ -140,22 +143,29 @@ export const ReceiptDetailSchema = z.object({
 	discount: z.number().optional(),
 });
 
+function getPages(pageData) {
+	const render_ooption = {
+		normalizeWhitespace: true,
+		disableCombineTextItems: false,
+	};
+
+	return pageData.getTextContent(render_ooption).then((textContent) => {
+		const data = textContent.items.map((item) => {
+			return {
+				y: item.transform[5],
+				x: item.transform[4],
+				value: item.str.trim(),
+			};
+		});
+		return JSON.stringify(data);
+	});
+}
+
 export const createReceiptSchema = z.object({
-	type: z.number(),
+	type: z.string(),
 	validity: z.string(),
 	payday: z.string(),
-	file: z.string(),
-	
-	// employeeId: z.number().optional(),
-	// opened: z.boolean().optional(),
-	// baseWage: z.number().optional(),
-	// contributionSalaryINSS: z.number().optional(),
-	// baseSalaryFGTS: z.number().optional(),
-	// FGTS: z.number().optional(),
-	// IRRF: z.number().optional(),
-	// totalWage: z.number().optional(),
-	// liquidWage: z.number().optional(),
-	// details: z.array(ReceiptDetailSchema).optional(),
+	files: z.any(),
 });
 
 type CreateReceiptDto = {
@@ -165,18 +175,88 @@ type CreateReceiptDto = {
 export async function createReceipt({
 	companyId,
 	type,
-	file,
-	...rest
+	files,
 }: CreateReceiptDto) {
-	await prisma.receipts.create({
-		data: {
-			validity: new Date(rest.validity),
-			payday: new Date(rest.payday),
-			employeeId: 27,
-			companyId,
-			receiptsTypesId: type,
-		},
-	});
+	if (files instanceof File) {
+		files = [files];
+	}
+
+	const configFile = JSON.parse(
+		fs.readFileSync("./configs/1.json", "utf-8"),
+	);
+
+	for (const file of files) {
+		const arrayBuffer = await (file as File).arrayBuffer();
+
+		const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+		const numPages = pdfDoc.getPageCount();
+
+		for (let i = 0; 1 < numPages; i++) {
+			const newPdfDoc = await PDFDocument.create();
+
+			const [page] = await newPdfDoc.copyPages(pdfDoc, [i]);
+			newPdfDoc.addPage(page);
+
+			const newPdfBytes = await newPdfDoc.save();
+
+			const newBuffeer = Buffer.from(newPdfBytes);
+
+			const data = await pdf(newBuffeer, {
+				pagerender: getPages,
+			});
+
+			const parsed = JSON.parse(
+				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
+			);
+
+			const dados = parsed.map((pagina) => {
+				const dadosPagina = {};
+				pagina.map((val) => {
+					configFile.map((field) => {
+						if (field.x === val.x && field.y === val.y) {
+							dadosPagina[field.value] = val.value;
+						}
+					});
+				});
+
+				return dadosPagina;
+			});
+
+			const stream = Readable.from(newBuffeer);
+
+			const params: PutObjectCommandInput = {
+				Bucket: process.env.S3_BUCKET_NAME,
+				Key: `${dados[0].enrolment}${randomUUID()}${new Date().getTime()}`,
+				Body: stream,
+				ContentType: "application/pdf",
+			};
+
+			const parallelUploads3 = new Upload({
+				client: S3,
+				queueSize: 4,
+				leavePartsOnError: false,
+				params: params,
+			});
+
+			const result = await parallelUploads3.done();
+			const employee = await prisma.employeeEnrolment.findFirst({
+				where: {
+					enrolment: dados[0].enrolment,
+					companyId,
+				},
+			});
+
+			await prisma.receipts.create({
+				data: {
+					file: result.Key,
+					receiptsTypesId: Number(type),
+					employeeId: employee.employeeId,
+					companyId,
+				},
+			});
+		}
+	}
 }
 
 export async function getTypes(companyId: Company["id"]) {
