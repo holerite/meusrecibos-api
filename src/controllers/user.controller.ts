@@ -19,6 +19,22 @@ export async function getByEmail(email: User["email"]) {
 	return result;
 }
 
+export async function getById(id: User["id"]) {
+	const result = await prisma.user.findUnique({
+		where: {
+			id: id,
+		},
+	});
+
+	if (result === null) {
+		throw new HTTPException(HTTPCode.NOT_FOUND, {
+			message: "Usuário inválido",
+		});
+	}
+
+	return result;
+}
+
 /**
  * @param companyId
  */

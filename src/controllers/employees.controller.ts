@@ -159,6 +159,23 @@ export async function getByEmail(email: Employee["email"]) {
 	return result;
 }
 
+export async function getById(id: Employee["id"]) {
+	const result = await prisma.employee.findUnique({
+		where: {
+			id: id,
+		},
+	});
+
+	if (result === null) {
+		throw new HTTPException(HTTPCode.NOT_FOUND, {
+			message: "Usuário inválido",
+		});
+	}
+
+	return result;
+}
+
+
 
 export async function saveUserToken (refreshToken: string, employee: Employee) {
 	await prisma.employee.update({

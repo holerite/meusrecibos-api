@@ -11,13 +11,15 @@ export async function getByUserId(userId: number) {
     },
   });
 
-
   return result;
 }
 
-export async function getByEmployeeId(employeeId: number) {
+export async function getByEmployeeId(employeeId: number, companyId?: number) {
   const enrolments = await prisma.employeeEnrolment.findMany({
     where: {
+      NOT: {
+        id: companyId,
+      },
       employeeId,
     },
     select: {
@@ -34,7 +36,6 @@ export async function getByEmployeeId(employeeId: number) {
     name: enrolment.company.name,
     id: enrolment.company.id,
   }));
-
 
   return companies;
 }
