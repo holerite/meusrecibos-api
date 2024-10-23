@@ -253,6 +253,8 @@ export async function createReceipt({
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
 
+			console.log(parsed)
+
 			const dados = parsed.map((pagina) => {
 				const dadosPagina = {};
 				pagina.map((val) => {
