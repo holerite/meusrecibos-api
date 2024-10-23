@@ -113,9 +113,10 @@ auth.post(
 
 auth.post("/logout", authMiddleware, async (c) => {
   try {
-    const { id } = c.get("user");
+    const { id, isAdmin } = c.get("user");
+    console.log(c.get("user"))
 
-    await authController.logout(id);
+    await authController.logout(id, isAdmin);
     return c.json({ message: "Usuário deslogado com sucesso" }, 200);
   } catch (error) {
     return handleError(c, error);

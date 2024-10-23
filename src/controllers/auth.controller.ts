@@ -105,7 +105,7 @@ export async function login({
     user: {
       companyId: companyId,
       companyName: company?.name,
-      isAdmin, 
+      isAdmin,
       id: user.id,
       name: user.name,
       email: user.email,
@@ -128,16 +128,30 @@ export async function getSystemRoutes(type: "user" | "employee") {
   return await prisma.systemRoutes.findMany(query);
 }
 
-export async function logout(id: number) {
-  await prisma.user.update({
-    data: {
-      refresh_token: null,
-      refresh_token_expires_at: null,
-    },
-    where: {
-      id,
-    },
-  });
+export async function logout(id: number, isAdmin: any) {
+  console.log(id, isAdmin);
+
+  if (isAdmin) {
+    await prisma.user.update({
+      data: {
+        refresh_token: null,
+        refresh_token_expires_at: null,
+      },
+      where: {
+        id,
+      },
+    });
+  } else {
+    await prisma.employee.update({
+      data: {
+        refresh_token: null,
+        refresh_token_expires_at: null,
+      },
+      where: {
+        id,
+      },
+    });
+  }
 
   return { message: "Logout successful" };
 }
@@ -145,7 +159,7 @@ export async function logout(id: number) {
 export async function refreshToken({
   refreshToken,
   user,
-  isAdmin
+  isAdmin,
 }: {
   refreshToken: string;
   user: User;
@@ -154,7 +168,7 @@ export async function refreshToken({
   try {
     const payload = (await jwt.verify(
       refreshToken,
-      REFRESH_TOKEN_SECRET,
+      REFRESH_TOKEN_SECRET
     )) as TokenPayload;
 
     // biome-ignore lint/style/noNonNullAssertion: <explanation>
