@@ -7,6 +7,8 @@ import {
   createReceiptType,
   createReceiptTypeSchema,
   getReceipts,
+  getReceiptsFiles,
+  getReceiptsFilesSchema,
   getTypes,
   receiptsFilterSchema,
   updateReceiptType,
@@ -48,6 +50,22 @@ app.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
     });
 
     return c.json(receipts);
+  } catch (error) {
+    return handleError(c, error);
+  }
+});
+
+app.get("/file", zValidator("query", getReceiptsFilesSchema), async (c) => {
+  try {
+    const { companyId } = c.get("user");
+    const { receiptId } = c.req.valid("query")
+
+    const files = await getReceiptsFiles({
+      companyId,
+      receiptId,
+    });
+
+    return c.json(files);
   } catch (error) {
     return handleError(c, error);
   }

@@ -1,6 +1,6 @@
 import type { Company } from "@prisma/client";
 import { prisma } from "../lib/db";
-import { z } from "zod";
+import { string, z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import { lastDayOfMonth, setDate, setHours, subHours } from "date-fns";
@@ -12,7 +12,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { PutObjectCommandInput } from "@aws-sdk/client-s3";
 import process from "node:process";
 import { randomUUID } from "node:crypto";
-import { S3 } from "../lib/s3.ts";
+import { S3 } from "../lib/s3";
 import fs from "node:fs";
 
 export const receiptsFilterSchema = z.object({
@@ -86,6 +86,7 @@ export async function getReceipts({
 	const receipts = await prisma.receipts.findMany({
 		where: query,
 		select: {
+			id: true,
 			employee: {
 				select: {
 					name: true,
@@ -135,13 +136,52 @@ export async function getReceipts({
 	};
 }
 
-export const ReceiptDetailSchema = z.object({
-	code: z.string().optional(),
-	description: z.string().optional(),
-	reference: z.number().optional(),
-	salary: z.number().optional(),
-	discount: z.number().optional(),
+export const getReceiptsFilesSchema = z.object({
+	receiptId: z.string()
 });
+
+type GetReceiptFilesDto = {
+	companyId: Company["id"];
+} & z.infer<typeof getReceiptsFilesSchema>;
+
+export async function getReceiptsFiles({ receiptId, companyId }: GetReceiptFilesDto) {
+
+	const receipt = await prisma.receipts.findFirstOrThrow({
+		where: {
+			companyId: companyId,
+			id: Number(receiptId),
+			file: {
+				not: undefined
+			}
+		},
+		select: {
+			file: true
+		}
+	})
+
+	// const newPdfDoc = await PDFDocument.create()
+	//
+	// for (const receipt of receipts) {
+	// 	const fileBuffer = await fetch(
+	// 		process.env.S3_BUCKET_DOMAIN + receipt.file
+	// 	).then(res => res.arrayBuffer())
+	//
+	// 	const pdfDoc = await PDFDocument.load(fileBuffer)
+	//
+	// 	const [page] = await newPdfDoc.copyPages(pdfDoc, [0])
+	// 	newPdfDoc.addPage(page)
+	// }
+	//
+	// const newPdfBytes = await newPdfDoc.save()
+	//
+	//
+	// const base64 = Buffer.from(newPdfBytes).toString("base64")
+
+	return process.env.S3_BUCKET_DOMAIN + receipt.file
+
+
+
+}
 
 function getPages(pageData) {
 	const render_ooption = {
@@ -176,10 +216,12 @@ export async function createReceipt({
 	companyId,
 	type,
 	files,
+	...rest
 }: CreateReceiptDto) {
 	if (files instanceof File) {
 		files = [files];
 	}
+
 
 	const configFile = JSON.parse(
 		fs.readFileSync("./configs/1.json", "utf-8"),
@@ -192,7 +234,8 @@ export async function createReceipt({
 
 		const numPages = pdfDoc.getPageCount();
 
-		for (let i = 0; 1 < numPages; i++) {
+
+		for (let i = 0; i < numPages; i++) {
 			const newPdfDoc = await PDFDocument.create();
 
 			const [page] = await newPdfDoc.copyPages(pdfDoc, [i]);
@@ -249,14 +292,18 @@ export async function createReceipt({
 
 			await prisma.receipts.create({
 				data: {
-					file: result.Key,
+					file: result.Key!,
 					receiptsTypesId: Number(type),
-					employeeId: employee.employeeId,
+					employeeId: employee!.employeeId,
 					companyId,
+					payday: rest.payday,
+					validity: rest.validity
 				},
 			});
 		}
 	}
+
+
 }
 
 export async function getTypes(companyId: Company["id"]) {
