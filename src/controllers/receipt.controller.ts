@@ -178,9 +178,6 @@ export async function getReceiptsFiles({ receiptId, companyId }: GetReceiptFiles
 	// const base64 = Buffer.from(newPdfBytes).toString("base64")
 
 	return process.env.S3_BUCKET_DOMAIN + receipt.file
-
-
-
 }
 
 function getPages(pageData) {
@@ -312,6 +309,7 @@ export async function getTypes(companyId: Company["id"]) {
 	return await prisma.receiptsTypes.findMany({
 		where: {
 			companyId,
+			active: true
 		},
 		select: {
 			name: true,
@@ -340,10 +338,23 @@ export async function createReceiptType({ name, companyId }: createTypeDto) {
 		},
 	});
 
-	if (existingType) {
+
+	if (existingType?.active === true) {
 		throw new HTTPException(HTTPCode.BAD_REQUEST, {
 			message: "O tipo de recibo já existe",
 		});
+	}
+
+	if (existingType?.active === false) {
+		return await prisma.receiptsTypes.update({
+			where: {
+				companyId,
+				id: existingType.id
+			},
+			data: {
+				active: true
+			}
+		})
 	}
 
 	return await prisma.receiptsTypes.create({

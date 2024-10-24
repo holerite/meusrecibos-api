@@ -40,14 +40,14 @@ export async function create(user: any) {
 }
 
 export async function validate(pin: string, uuid: string) {
-	
+
 	const result = await prisma.pin.findUnique({
 		where: {
 			pin: pin,
 			id: uuid
 		}
 	})
-	
+
 	if (result === null) {
 		throw new HTTPException(HTTPCode.NOT_FOUND, {
 			message: "PIN inválido",

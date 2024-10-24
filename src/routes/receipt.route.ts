@@ -15,6 +15,7 @@ import {
   updateTypeSchema,
 } from "../controllers/receipt.controller";
 import { handleError } from "../utils/error.util";
+import { prisma } from "../lib/db";
 
 const app = new Hono();
 
@@ -111,5 +112,28 @@ app.put("/type", zValidator("json", updateTypeSchema), async (c) => {
     return handleError(c, error);
   }
 });
+
+app.delete("/type/:id", authMiddleware, async c => {
+  try {
+    const { companyId } = c.get("user")
+    const id = c.req.param('id')
+
+    await prisma.receiptsTypes.update({
+      where: {
+        id: Number(id),
+        companyId,
+      },
+      data: {
+        active: false
+      }
+    })
+
+    return c.json({ message: "Tipo de recibo excluído com sucesso" })
+
+  } catch (error) {
+    return handleError(c, error)
+  }
+
+})
 
 export default app;

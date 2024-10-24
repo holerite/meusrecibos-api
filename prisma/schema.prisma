@@ -34,9 +34,6 @@ model Employee {
   email                    String              @unique
   name                     String
   cpf                      String              @unique
-  admission                DateTime?
-  position                 String?
-  cbo                      String?
   refresh_token            String?
   refresh_token_expires_at DateTime?
   Receipts                 Receipts[]
@@ -46,6 +43,7 @@ model Employee {
 model EmployeeEnrolment {
   id         Int      @id @default(autoincrement())
   enrolment  String
+  active     Boolean  @default(true)
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId Int
   companyId  Int
@@ -53,13 +51,13 @@ model EmployeeEnrolment {
 }
 
 model Receipts {
-  id                     Int       @id @default(autoincrement())
-  opened                 Boolean   @default(false)
-  payday                 DateTime?
-  validity               DateTime?
-  file                   String
+  id       Int       @id @default(autoincrement())
+  opened   Boolean   @default(false)
+  payday   DateTime?
+  validity DateTime?
+  file     String
 
- employee        Employee      @relation(fields: [employeeId], references: [id])
+  employee        Employee      @relation(fields: [employeeId], references: [id])
   employeeId      Int
   company         Company       @relation(fields: [companyId], references: [id])
   companyId       Int
@@ -72,6 +70,7 @@ model ReceiptsTypes {
   name      String
   company   Company    @relation(fields: [companyId], references: [id])
   companyId Int
+  active    Boolean    @default(true)
   Receipts  Receipts[]
 }
 
