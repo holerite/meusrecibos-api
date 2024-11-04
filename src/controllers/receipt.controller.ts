@@ -121,7 +121,9 @@ export async function getReceipts({
 
 	const total_records = aggregate._count._all;
 	const total_pages = Math.ceil(total_records / (Number(take) || 1));
-	const next_page = Number(page) + 1 === total_pages ? null : Number(page) + 1;
+	const next_page = Number(page) + 1 === total_pages
+		? null
+		: Number(page) + 1;
 	const prev_page = Number(page) === 0 ? null : Number(page) - 1;
 
 	return {
@@ -137,27 +139,28 @@ export async function getReceipts({
 }
 
 export const getReceiptsFilesSchema = z.object({
-	receiptId: z.string()
+	receiptId: z.string(),
 });
 
 type GetReceiptFilesDto = {
 	companyId: Company["id"];
 } & z.infer<typeof getReceiptsFilesSchema>;
 
-export async function getReceiptsFiles({ receiptId, companyId }: GetReceiptFilesDto) {
-
+export async function getReceiptsFiles(
+	{ receiptId, companyId }: GetReceiptFilesDto,
+) {
 	const receipt = await prisma.receipts.findFirstOrThrow({
 		where: {
 			companyId: companyId,
 			id: Number(receiptId),
 			file: {
-				not: undefined
-			}
+				not: undefined,
+			},
 		},
 		select: {
-			file: true
-		}
-	})
+			file: true,
+		},
+	});
 
 	// const newPdfDoc = await PDFDocument.create()
 	//
@@ -177,7 +180,7 @@ export async function getReceiptsFiles({ receiptId, companyId }: GetReceiptFiles
 	//
 	// const base64 = Buffer.from(newPdfBytes).toString("base64")
 
-	return process.env.S3_BUCKET_DOMAIN + receipt.file
+	return process.env.S3_BUCKET_DOMAIN + receipt.file;
 }
 
 function getPages(pageData) {
@@ -215,10 +218,15 @@ export async function createReceipt({
 	files,
 	...rest
 }: CreateReceiptDto) {
+	if (!files) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "Arquivos são obrigatórios",
+		});
+	}
+
 	if (files instanceof File) {
 		files = [files];
 	}
-
 
 	const configFile = JSON.parse(
 		fs.readFileSync("./configs/1.json", "utf-8"),
@@ -230,7 +238,6 @@ export async function createReceipt({
 		const pdfDoc = await PDFDocument.load(arrayBuffer);
 
 		const numPages = pdfDoc.getPageCount();
-
 
 		for (let i = 0; i < numPages; i++) {
 			const newPdfDoc = await PDFDocument.create();
@@ -250,8 +257,6 @@ export async function createReceipt({
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
 
-			console.log(parsed)
-
 			const dados = parsed.map((pagina) => {
 				const dadosPagina = {};
 				pagina.map((val) => {
@@ -269,7 +274,7 @@ export async function createReceipt({
 
 			const params: PutObjectCommandInput = {
 				Bucket: process.env.S3_BUCKET_NAME,
-				Key: `${dados[0].enrolment}${randomUUID()}${new Date().getTime()}`,
+				Key: `${randomUUID()}${new Date().getTime()}`,
 				Body: stream,
 				ContentType: "application/pdf",
 			};
@@ -282,6 +287,7 @@ export async function createReceipt({
 			});
 
 			const result = await parallelUploads3.done();
+
 			const employee = await prisma.employeeEnrolment.findFirst({
 				where: {
 					enrolment: dados[0].enrolment,
@@ -289,27 +295,35 @@ export async function createReceipt({
 				},
 			});
 
+			if (!employee) {
+				await prisma.temporaryEmployee.create({
+					data: {
+						name: dados[0].employeeName,
+						enrolment: dados[0].enrolment,
+						companyId,
+					},
+				});
+			}
+
 			await prisma.receipts.create({
 				data: {
 					file: result.Key!,
 					receiptsTypesId: Number(type),
-					employeeId: employee!.employeeId,
 					companyId,
+					enrolment: dados[0].enrolment,
 					payday: rest.payday,
-					validity: rest.validity
+					validity: rest.validity,
 				},
 			});
 		}
 	}
-
-
 }
 
 export async function getTypes(companyId: Company["id"]) {
 	return await prisma.receiptsTypes.findMany({
 		where: {
 			companyId,
-			active: true
+			active: true,
 		},
 		select: {
 			name: true,
@@ -338,7 +352,6 @@ export async function createReceiptType({ name, companyId }: createTypeDto) {
 		},
 	});
 
-
 	if (existingType?.active === true) {
 		throw new HTTPException(HTTPCode.BAD_REQUEST, {
 			message: "O tipo de recibo já existe",
@@ -349,12 +362,12 @@ export async function createReceiptType({ name, companyId }: createTypeDto) {
 		return await prisma.receiptsTypes.update({
 			where: {
 				companyId,
-				id: existingType.id
+				id: existingType.id,
 			},
 			data: {
-				active: true
-			}
-		})
+				active: true,
+			},
+		});
 	}
 
 	return await prisma.receiptsTypes.create({

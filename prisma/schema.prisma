@@ -16,6 +16,7 @@ model Company {
   Receipts          Receipts[]
   ReceiptsTypes     ReceiptsTypes[]
   EmployeeEnrolment EmployeeEnrolment[]
+  TemporaryEmployee TemporaryEmployee[]
 }
 
 model User {
@@ -36,18 +37,25 @@ model Employee {
   cpf                      String              @unique
   refresh_token            String?
   refresh_token_expires_at DateTime?
-  Receipts                 Receipts[]
   EmployeeEnrolment        EmployeeEnrolment[]
 }
 
 model EmployeeEnrolment {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   enrolment  String
-  active     Boolean  @default(true)
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId Int
+  active     Boolean   @default(true)
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId Int?
   companyId  Int
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model TemporaryEmployee {
+  id        Int     @id @default(autoincrement())
+  name      String
+  enrolment String
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
 }
 
 model Receipts {
@@ -57,8 +65,7 @@ model Receipts {
   validity DateTime?
   file     String
 
-  employee        Employee      @relation(fields: [employeeId], references: [id])
-  employeeId      Int
+  enrolment       String
   company         Company       @relation(fields: [companyId], references: [id])
   companyId       Int
   ReceiptsTypes   ReceiptsTypes @relation(fields: [receiptsTypesId], references: [id])

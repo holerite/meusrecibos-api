@@ -59,7 +59,7 @@ app.get("/", zValidator("query", receiptsFilterSchema), async (c) => {
 app.get("/file", zValidator("query", getReceiptsFilesSchema), async (c) => {
   try {
     const { companyId } = c.get("user");
-    const { receiptId } = c.req.valid("query")
+    const { receiptId } = c.req.valid("query");
 
     const files = await getReceiptsFiles({
       companyId,
@@ -113,10 +113,10 @@ app.put("/type", zValidator("json", updateTypeSchema), async (c) => {
   }
 });
 
-app.delete("/type/:id", authMiddleware, async c => {
+app.delete("/type/:id", authMiddleware, async (c) => {
   try {
-    const { companyId } = c.get("user")
-    const id = c.req.param('id')
+    const { companyId } = c.get("user");
+    const id = c.req.param("id");
 
     await prisma.receiptsTypes.update({
       where: {
@@ -124,16 +124,14 @@ app.delete("/type/:id", authMiddleware, async c => {
         companyId,
       },
       data: {
-        active: false
-      }
-    })
+        active: false,
+      },
+    });
 
-    return c.json({ message: "Tipo de recibo excluído com sucesso" })
-
+    return c.json({ message: "Tipo de recibo excluído com sucesso" });
   } catch (error) {
-    return handleError(c, error)
+    return handleError(c, error);
   }
-
-})
+});
 
 export default app;
