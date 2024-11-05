@@ -76,8 +76,8 @@ app.get("/file", zValidator("query", getReceiptsFilesSchema), async (c) => {
 app.get("/type", async (c) => {
   try {
     const { companyId } = c.get("user");
-
-    const types = await getTypes(companyId);
+    const all = c.req.query("all");
+    const types = await getTypes(companyId, Boolean(all));
 
     return c.json(types);
   } catch (error) {

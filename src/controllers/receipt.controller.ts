@@ -340,15 +340,16 @@ export async function createReceipt({
 	}
 }
 
-export async function getTypes(companyId: Company["id"]) {
+export async function getTypes(companyId: Company["id"], all?: boolean) {
 	return await prisma.receiptsTypes.findMany({
 		where: {
 			companyId,
-			active: true,
+			active: all ? undefined : true,
 		},
 		select: {
 			name: true,
 			id: true,
+			active: true,
 		},
 	});
 }
