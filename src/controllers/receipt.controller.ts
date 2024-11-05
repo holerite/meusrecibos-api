@@ -412,3 +412,16 @@ export async function updateReceiptType({
 		},
 	});
 }
+
+export async function getErrors(companyId: Company["id"]) {
+	return await prisma.temporaryEmployee.findMany({
+		where: {
+			companyId,
+		},
+		select: {
+			id: true,
+			name: true,
+			enrolment: true,
+		},
+	});
+}

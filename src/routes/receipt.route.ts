@@ -6,6 +6,7 @@ import {
   createReceiptSchema,
   createReceiptType,
   createReceiptTypeSchema,
+  getErrors,
   getReceipts,
   getReceiptsFiles,
   getReceiptsFilesSchema,
@@ -129,6 +130,18 @@ app.delete("/type/:id", authMiddleware, async (c) => {
     });
 
     return c.json({ message: "Tipo de recibo excluído com sucesso" });
+  } catch (error) {
+    return handleError(c, error);
+  }
+});
+
+app.get("/errors", async (c) => {
+  try {
+    const { companyId } = c.get("user");
+
+    const errors = await getErrors(companyId);
+
+    return c.json(errors);
   } catch (error) {
     return handleError(c, error);
   }
