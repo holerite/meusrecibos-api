@@ -50,11 +50,6 @@ export async function getReceipts({
 		company: {
 			id: companyId,
 		},
-		employee: {
-			name: {
-				contains: filter.employee,
-			},
-		},
 	};
 
 	if (filter.paydayFrom && filter.paydayTo) {
@@ -83,28 +78,42 @@ export async function getReceipts({
 		query.employeeId = userId;
 	}
 
+	if (filter.employee) {
+		const employee = await prisma.employeeEnrolment.findMany({
+			where: {
+				employee: {
+					name: {
+						contains: filter.employee,
+					},
+				},
+			},
+			select: {
+				enrolment: true,
+			},
+		});
+
+		query.OR = employee.map((e) => ({
+			enrolment: e.enrolment,
+		}));
+	}
+
 	const receipts = await prisma.receipts.findMany({
 		where: query,
 		select: {
 			id: true,
-			employee: {
-				select: {
-					name: true,
-				},
-			},
+			enrolment: true,
 			ReceiptsTypes: {
 				select: {
 					name: true,
 				},
 			},
+			name: true,
 			payday: true,
 			validity: true,
 			opened: true,
 		},
 		orderBy: {
-			payday: {
-				sort: "desc",
-			},
+			payday: "desc",
 		},
 		take: Number(take),
 		skip: Number(take) * Number(page),
@@ -311,6 +320,7 @@ export async function createReceipt({
 					receiptsTypesId: Number(type),
 					companyId,
 					enrolment: dados[0].enrolment,
+					name: dados[0].employeeName,
 					payday: rest.payday,
 					validity: rest.validity,
 				},

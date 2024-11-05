@@ -59,12 +59,12 @@ model TemporaryEmployee {
 }
 
 model Receipts {
-  id       Int       @id @default(autoincrement())
-  opened   Boolean   @default(false)
-  payday   DateTime?
-  validity DateTime?
-  file     String
-
+  id              Int           @id @default(autoincrement())
+  opened          Boolean       @default(false)
+  payday          DateTime?
+  validity        DateTime?
+  file            String
+  name            String
   enrolment       String
   company         Company       @relation(fields: [companyId], references: [id])
   companyId       Int
