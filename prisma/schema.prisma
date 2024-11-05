@@ -75,6 +75,7 @@ model Receipts {
 model ReceiptsTypes {
   id        Int        @id @default(autoincrement())
   name      String
+  file      String     @default("")
   company   Company    @relation(fields: [companyId], references: [id])
   companyId Int
   active    Boolean    @default(true)

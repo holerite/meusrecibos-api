@@ -237,9 +237,20 @@ export async function createReceipt({
 		files = [files];
 	}
 
-	const configFile = JSON.parse(
-		fs.readFileSync("./configs/1.json", "utf-8"),
-	);
+	const config = await prisma.receiptsTypes.findFirstOrThrow({
+		where: {
+			id: Number(type),
+		},
+		select: {
+			file: true,
+		},
+	});
+
+	const configFile = await fetch(
+		process.env.S3_BUCKET_DOMAIN + config.file,
+	).then((res) => res.json());
+
+	console.log(configFile);
 
 	for (const file of files) {
 		const arrayBuffer = await (file as File).arrayBuffer();
