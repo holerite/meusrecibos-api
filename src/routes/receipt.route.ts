@@ -101,35 +101,14 @@ app.post("/type", zValidator("json", createReceiptTypeSchema), async (c) => {
 app.put("/type", zValidator("json", updateTypeSchema), async (c) => {
   try {
     const { companyId } = c.get("user");
-    const { id, name } = c.req.valid("json");
+    const { id, active } = c.req.valid("json");
     await updateReceiptType({
       companyId,
-      name,
+      active,
       id,
     });
 
     return c.json({ message: "Tipo de recibo editado com sucesso" });
-  } catch (error) {
-    return handleError(c, error);
-  }
-});
-
-app.delete("/type/:id", authMiddleware, async (c) => {
-  try {
-    const { companyId } = c.get("user");
-    const id = c.req.param("id");
-
-    await prisma.receiptsTypes.update({
-      where: {
-        id: Number(id),
-        companyId,
-      },
-      data: {
-        active: false,
-      },
-    });
-
-    return c.json({ message: "Tipo de recibo excluído com sucesso" });
   } catch (error) {
     return handleError(c, error);
   }

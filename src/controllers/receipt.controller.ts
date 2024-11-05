@@ -1,6 +1,6 @@
 import type { Company } from "@prisma/client";
 import { prisma } from "../lib/db";
-import { string, z } from "zod";
+import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import { lastDayOfMonth, setDate, setHours, subHours } from "date-fns";
@@ -9,7 +9,7 @@ import { Buffer } from "node:buffer";
 import pdf from "pdf-parse";
 import { Readable } from "node:stream";
 import { Upload } from "@aws-sdk/lib-storage";
-import { PutObjectCommandInput } from "@aws-sdk/client-s3";
+import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
 import process from "node:process";
 import { randomUUID } from "node:crypto";
 import { S3 } from "../lib/s3";
@@ -400,8 +400,8 @@ export async function createReceiptType({ name, companyId }: createTypeDto) {
 }
 
 export const updateTypeSchema = z.object({
-	name: z.string(),
 	id: z.number(),
+	active: z.boolean(),
 });
 
 type updateReceiptTypeDto = {
@@ -411,12 +411,12 @@ type updateReceiptTypeDto = {
 export async function updateReceiptType({
 	companyId,
 	id,
-	name,
+	active,
 }: updateReceiptTypeDto) {
 	await prisma.receiptsTypes.update({
 		data: {
 			companyId,
-			name,
+			active,
 		},
 		where: {
 			id,
