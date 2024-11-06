@@ -6,7 +6,6 @@ import api from "./routes";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { customLogger } from "./middlewares/logger.middleware";
-import "./lib/instrument";
 
 const app = new Hono();
 
