@@ -53,7 +53,7 @@ auth.post(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 auth.post(
@@ -69,25 +69,29 @@ auth.post(
       const { email } = c.get("jwtPayload");
       const user = await userController.getByEmail(email);
 
-      const result = await authController.login({ user, companyId, isAdmin: true });
-	
-	  const routes = await authController.getSystemRoutes("user");
+      const result = await authController.login({
+        user,
+        companyId,
+        isAdmin: true,
+      });
+
+      const routes = await authController.getSystemRoutes("user");
 
       await authController.saveUserToken(result.accessToken, user);
-	
-	  result.user.routes = routes;
+
+      result.user.routes = routes;
 
       return c.json(result);
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 auth.post(
   "/change-company",
   zValidator("json", authValidator.company),
-  authMiddleware, 
+  authMiddleware,
   async (c) => {
     try {
       const { companyId } = c.req.valid("json");
@@ -96,25 +100,29 @@ auth.post(
 
       const user = await userController.getById(id);
 
-      const result = await authController.login({ user, companyId, isAdmin: true });
-	
-	  const routes = await authController.getSystemRoutes("user");
+      const result = await authController.login({
+        user,
+        companyId,
+        isAdmin: true,
+      });
+
+      const routes = await authController.getSystemRoutes("user");
 
       await authController.saveUserToken(result.accessToken, user);
-	
-	  result.user.routes = routes;
+
+      result.user.routes = routes;
 
       return c.json(result);
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 auth.post("/logout", authMiddleware, async (c) => {
   try {
     const { id, isAdmin } = c.get("user");
-    console.log(c.get("user"))
+    console.log(c.get("user"));
 
     await authController.logout(id, isAdmin);
     return c.json({ message: "Usuário deslogado com sucesso" }, 200);
@@ -126,7 +134,6 @@ auth.post("/logout", authMiddleware, async (c) => {
 auth.get(
   "/company",
   authMiddleware,
-
   async (c) => {
     try {
       const { id } = c.get("user");
@@ -136,8 +143,22 @@ auth.get(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
- 
+
+auth.get(
+  "/company",
+  authMiddleware,
+  async (c) => {
+    try {
+      const { id } = c.get("user");
+
+      const employees = await companyController.getByUserId(id);
+      return c.json(employees, 200);
+    } catch (error) {
+      return handleError(c, error);
+    }
+  },
+);
 
 export default auth;

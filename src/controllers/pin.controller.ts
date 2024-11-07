@@ -40,13 +40,12 @@ export async function create(user: any) {
 }
 
 export async function validate(pin: string, uuid: string) {
-
 	const result = await prisma.pin.findUnique({
 		where: {
 			pin: pin,
-			id: uuid
-		}
-	})
+			id: uuid,
+		},
+	});
 
 	if (result === null) {
 		throw new HTTPException(HTTPCode.NOT_FOUND, {
@@ -57,8 +56,7 @@ export async function validate(pin: string, uuid: string) {
 	await prisma.pin.delete({
 		where: {
 			pin: pin,
-			id: uuid
-		}
-	})
-
+			id: uuid,
+		},
+	});
 }

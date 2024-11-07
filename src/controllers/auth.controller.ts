@@ -44,15 +44,14 @@ async function generateToken({
       id: user.id,
       email: user.email,
       isAdmin,
-      exp:
-        datefns
-          .add(new Date(), {
-            seconds: expires,
-          })
-          .getTime() / 1000,
+      exp: datefns
+        .add(new Date(), {
+          seconds: expires,
+        })
+        .getTime() / 1000,
       companyId,
     },
-    secret
+    secret,
   );
 }
 
@@ -168,7 +167,7 @@ export async function refreshToken({
   try {
     const payload = (await jwt.verify(
       refreshToken,
-      REFRESH_TOKEN_SECRET
+      REFRESH_TOKEN_SECRET,
     )) as TokenPayload;
 
     // biome-ignore lint/style/noNonNullAssertion: <explanation>
@@ -195,7 +194,7 @@ export async function refreshToken({
       data: {
         refresh_token: newRefreshToken,
         refresh_token_expires_at: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
+          Date.now() + 7 * 24 * 60 * 60 * 1000,
         ),
       },
       where: {
