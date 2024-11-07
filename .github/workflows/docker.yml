@@ -38,4 +38,4 @@ jobs:
         with:
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.VULTR_REG }}/meusrecibosapi/api:latest
+          tags: ewr.vultrcr.com/meusrecibosapi/api:latest
