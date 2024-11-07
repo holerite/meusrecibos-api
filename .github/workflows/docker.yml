@@ -38,5 +38,4 @@ jobs:
         with:
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ secrets.VULTR_REG }}/meusrecibosapi/api:latest
