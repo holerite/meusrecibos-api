@@ -20,8 +20,6 @@ export async function create(user: any) {
 		process.env.JWT_SECRET,
 	);
 
-	console.log(pin, user.id);
-
 	await prisma.pin.deleteMany({
 		where: {
 			loginId: user.id,
@@ -36,8 +34,6 @@ export async function create(user: any) {
 		},
 	});
 
-	console.log(token, pin);
-
 	return {
 		pin: String(pin),
 		token: token,
@@ -45,8 +41,6 @@ export async function create(user: any) {
 }
 
 export async function validate(pin: string, uuid: string) {
-	console.log(pin, uuid);
-
 	const result = await prisma.pin.findUnique({
 		where: {
 			pin: pin,
