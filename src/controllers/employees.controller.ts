@@ -28,8 +28,7 @@ export async function getEmployees({
 	take,
 	page,
 }: getEmployeesDto) {
-
-	const filter= {
+	const filter = {
 		name: {
 			contains: nome,
 		},
@@ -49,11 +48,11 @@ export async function getEmployees({
 				},
 			},
 		},
-	}
+	};
 
 	const employees = await prisma.employee.findMany({
 		where: {
-			...filter
+			...filter,
 		},
 		include: {
 			EmployeeEnrolment: {
@@ -62,15 +61,6 @@ export async function getEmployees({
 				},
 				select: {
 					enrolment: true,
-				},
-			},
-			_count: {
-				select: {
-					Receipts: {
-						where: {
-							companyId: companyId,
-						},
-					},
 				},
 			},
 		},
@@ -83,23 +73,26 @@ export async function getEmployees({
 			_all: true,
 		},
 		where: {
-			...filter
+			...filter,
 		},
 	});
 
 	const total_records = aggregate._count._all;
 	const total_pages = Math.ceil(total_records / (Number(take) || 1));
-	const next_page = Number(page) + 1 === total_pages ? null : Number(page) + 1;
+	const next_page = Number(page) + 1 === total_pages
+		? null
+		: Number(page) + 1;
 	const prev_page = Number(page) === 0 ? null : Number(page) - 1;
 
 	return {
-		employees: employees.map(({ EmployeeEnrolment, _count, ...employee }) => {
-			return {
-				enrolment: EmployeeEnrolment[0].enrolment,
-				...employee,
-				receipts: _count.Receipts,
-			};
-		}),
+		employees: employees.map(
+			({ EmployeeEnrolment, ...employee }) => {
+				return {
+					enrolment: EmployeeEnrolment[0].enrolment,
+					...employee,
+				};
+			},
+		),
 		pagination: {
 			total_records,
 			total_pages,
@@ -175,17 +168,14 @@ export async function getById(id: Employee["id"]) {
 	return result;
 }
 
-
-
-export async function saveUserToken (refreshToken: string, employee: Employee) {
+export async function saveUserToken(refreshToken: string, employee: Employee) {
 	await prisma.employee.update({
 		data: {
 			refresh_token: refreshToken,
-			refresh_token_expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000)
+			refresh_token_expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000),
 		},
 		where: {
-			id: employee.id
-		}
-	})
-
+			id: employee.id,
+		},
+	});
 }

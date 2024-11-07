@@ -20,16 +20,17 @@ export async function create(user: any) {
 		process.env.JWT_SECRET,
 	);
 
-	await prisma.pin.upsert({
-		create: {
-			loginId: user.id,
-			pin: String(pin),
-		},
-		update: {
-			pin: String(pin),
-		},
+	await prisma.pin.deleteMany({
 		where: {
 			loginId: user.id,
+		},
+	});
+
+	await prisma.pin.create({
+		data: {
+			id: uuid,
+			loginId: user.id,
+			pin: String(pin),
 		},
 	});
 
