@@ -1,16 +1,41 @@
-import { eq, sql } from "drizzle-orm";
-import { CompanySchema } from "../schemas/company.schema";
-import { userToCompany } from "../schemas/UserCompany.relation";
-import { db } from "../lib/db";
+import { prisma } from "../lib/db";
 
-export async function get(userId: number) {
-	const userCompanies = await db
-		.select()
-		.from(userToCompany)
-		.where(eq(userToCompany.userId, userId));
+export async function getByUserId(userId: number) {
+  const result = await prisma.company.findMany({
+    where: {
+      Users: {
+        some: {
+          id: userId,
+        },
+      },
+    },
+  });
 
-	return await db
-		.select()
-		.from(CompanySchema)
-		.where(sql`id IN ${userCompanies.map((comp) => `${comp.companyId}`)}`);
+  return result;
+}
+
+export async function getByEmployeeId(employeeId: number, companyId?: number) {
+  const enrolments = await prisma.employeeEnrolment.findMany({
+    where: {
+      NOT: {
+        id: companyId,
+      },
+      employeeId,
+    },
+    select: {
+      company: {
+        select: {
+          name: true,
+          id: true,
+        },
+      },
+    },
+  });
+
+  const companies = enrolments.map((enrolment) => ({
+    name: enrolment.company.name,
+    id: enrolment.company.id,
+  }));
+
+  return companies;
 }

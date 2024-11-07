@@ -1,0 +1,97 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Company {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  config            String?
+  Users             User[]
+  Receipts          Receipts[]
+  ReceiptsTypes     ReceiptsTypes[]
+  EmployeeEnrolment EmployeeEnrolment[]
+  TemporaryEmployee TemporaryEmployee[]
+}
+
+model User {
+  id                       Int       @id @default(autoincrement())
+  name                     String
+  email                    String    @unique
+  refresh_token            String?
+  refresh_token_expires_at DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @default(now())
+  Companies                Company[]
+}
+
+model Employee {
+  id                       Int                 @id @default(autoincrement())
+  email                    String              @unique
+  name                     String
+  cpf                      String              @unique
+  refresh_token            String?
+  refresh_token_expires_at DateTime?
+  EmployeeEnrolment        EmployeeEnrolment[]
+}
+
+model EmployeeEnrolment {
+  id         Int       @id @default(autoincrement())
+  enrolment  String
+  active     Boolean   @default(true)
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId Int?
+  companyId  Int
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model TemporaryEmployee {
+  id        Int     @id @default(autoincrement())
+  name      String
+  enrolment String
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
+}
+
+model Receipts {
+  id              Int           @id @default(autoincrement())
+  opened          Boolean       @default(false)
+  payday          DateTime?
+  validity        DateTime?
+  file            String
+  name            String
+  enrolment       String
+  company         Company       @relation(fields: [companyId], references: [id])
+  companyId       Int
+  ReceiptsTypes   ReceiptsTypes @relation(fields: [receiptsTypesId], references: [id])
+  receiptsTypesId Int
+}
+
+model ReceiptsTypes {
+  id        Int        @id @default(autoincrement())
+  name      String
+  file      String     @default("")
+  company   Company    @relation(fields: [companyId], references: [id])
+  companyId Int
+  active    Boolean    @default(true)
+  Receipts  Receipts[]
+}
+
+model Pin {
+  id      String @id @default(uuid())
+  pin     String
+  loginId Int?   @unique
+}
+
+model SystemRoutes {
+  id           Int     @id @default(autoincrement())
+  name         String
+  route        String
+  active       Boolean
+  clientAccess Boolean @default(false)
+}
