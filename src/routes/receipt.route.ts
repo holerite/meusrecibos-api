@@ -16,7 +16,6 @@ import {
   updateTypeSchema,
 } from "../controllers/receipt.controller";
 import { handleError } from "../utils/error.util";
-import { prisma } from "../lib/db";
 
 const app = new Hono();
 

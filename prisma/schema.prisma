@@ -41,13 +41,14 @@ model Employee {
 }
 
 model EmployeeEnrolment {
-  id         Int       @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   enrolment  String
-  active     Boolean   @default(true)
-  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  active     Boolean    @default(true)
+  employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId Int?
   companyId  Int
-  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Receipts   Receipts[]
 }
 
 model TemporaryEmployee {
@@ -59,16 +60,16 @@ model TemporaryEmployee {
 }
 
 model Receipts {
-  id              Int           @id @default(autoincrement())
-  opened          Boolean       @default(false)
+  id              Int                @id @default(autoincrement())
+  opened          Boolean            @default(false)
   payday          DateTime?
   validity        DateTime?
   file            String
-  name            String
-  enrolment       String
-  company         Company       @relation(fields: [companyId], references: [id])
+  enrolmentId     Int?
+  enrolment       EmployeeEnrolment? @relation(fields: [enrolmentId], references: [id])
+  company         Company            @relation(fields: [companyId], references: [id])
   companyId       Int
-  ReceiptsTypes   ReceiptsTypes @relation(fields: [receiptsTypesId], references: [id])
+  ReceiptsTypes   ReceiptsTypes      @relation(fields: [receiptsTypesId], references: [id])
   receiptsTypesId Int
 }
 

@@ -4,7 +4,7 @@ import { prisma } from "../lib/db";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import * as datefns from "date-fns";
-import { Employee, User } from "@prisma/client";
+import type { Employee, User } from "@prisma/client";
 
 type TokenPayload = {
   id: number;

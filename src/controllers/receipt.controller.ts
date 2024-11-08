@@ -49,6 +49,13 @@ export async function getReceipts({
 		company: {
 			id: companyId,
 		},
+		enrolment: {
+			employee: {
+				name: {
+					not: undefined,
+				},
+			},
+		},
 	};
 
 	if (filter.paydayFrom && filter.paydayTo) {
@@ -100,13 +107,20 @@ export async function getReceipts({
 		where: query,
 		select: {
 			id: true,
-			enrolment: true,
+			enrolment: {
+				select: {
+					employee: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
 			ReceiptsTypes: {
 				select: {
 					name: true,
 				},
 			},
-			name: true,
 			payday: true,
 			validity: true,
 			opened: true,
@@ -135,7 +149,10 @@ export async function getReceipts({
 	const prev_page = Number(page) === 0 ? null : Number(page) - 1;
 
 	return {
-		receipts: receipts,
+		receipts: receipts.map((receipt) => ({
+			...receipt,
+			name: receipt.enrolment?.employee?.name,
+		})),
 		pagination: {
 			total_records,
 			total_pages,
@@ -249,8 +266,6 @@ export async function createReceipt({
 		process.env.S3_BUCKET_DOMAIN + config.file,
 	).then((res) => res.json());
 
-	console.log(configFile);
-
 	for (const file of files) {
 		const arrayBuffer = await (file as File).arrayBuffer();
 
@@ -307,17 +322,24 @@ export async function createReceipt({
 
 			const result = await parallelUploads3.done();
 
-			const employee = await prisma.employeeEnrolment.findFirst({
+			let employeeEnrolment = await prisma.employeeEnrolment.findFirst({
 				where: {
 					enrolment: dados[0].enrolment,
 					companyId,
 				},
 			});
 
-			if (!employee) {
+			if (!employeeEnrolment) {
 				await prisma.temporaryEmployee.create({
 					data: {
 						name: dados[0].employeeName,
+						enrolment: dados[0].enrolment,
+						companyId,
+					},
+				});
+
+				employeeEnrolment = await prisma.employeeEnrolment.create({
+					data: {
 						enrolment: dados[0].enrolment,
 						companyId,
 					},
@@ -329,8 +351,7 @@ export async function createReceipt({
 					file: result.Key!,
 					receiptsTypesId: Number(type),
 					companyId,
-					enrolment: dados[0].enrolment,
-					name: dados[0].employeeName,
+					enrolmentId: employeeEnrolment?.id,
 					payday: rest.payday,
 					validity: rest.validity,
 				},
