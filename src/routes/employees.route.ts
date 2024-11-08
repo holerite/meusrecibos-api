@@ -3,10 +3,11 @@ import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import {
   createEmployee,
-  getEmployees,
+  deletePendingEmployee,
   getByEmail,
-  saveUserToken,
   getById,
+  getEmployees,
+  saveUserToken,
 } from "../controllers/employees.controller";
 import { handleError } from "../utils/error.util";
 import { zValidator } from "../middlewares/validator.middleware";
@@ -36,7 +37,7 @@ employeesRoute.get(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 employeesRoute.post(
@@ -52,12 +53,13 @@ employeesRoute.post(
         ...employee,
         companyId: companyId,
       });
+      await deletePendingEmployee(employee.enrolment);
 
       return c.json({ message: "Colaborador criado com sucesso" });
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 employeesRoute.post(
@@ -81,7 +83,7 @@ employeesRoute.post(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 employeesRoute.post(
@@ -105,7 +107,7 @@ employeesRoute.post(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 employeesRoute.post(
@@ -137,7 +139,7 @@ employeesRoute.post(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 employeesRoute.post(
@@ -168,13 +170,12 @@ employeesRoute.post(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
 
 employeesRoute.get(
   "/company",
   authMiddleware,
-
   async (c) => {
     try {
       const { id, companyId } = c.get("user");
@@ -184,7 +185,7 @@ employeesRoute.get(
     } catch (error) {
       return handleError(c, error);
     }
-  }
+  },
 );
- 
+
 export default employeesRoute;

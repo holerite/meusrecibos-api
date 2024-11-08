@@ -41,22 +41,24 @@ model Employee {
 }
 
 model EmployeeEnrolment {
-  id         Int        @id @default(autoincrement())
-  enrolment  String
-  active     Boolean    @default(true)
-  employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId Int?
-  companyId  Int
-  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  Receipts   Receipts[]
+  id                Int                 @id @default(autoincrement())
+  enrolment         String
+  active            Boolean             @default(true)
+  employee          Employee?           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId        Int?
+  companyId         Int
+  company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Receipts          Receipts[]
+  TemporaryEmployee TemporaryEmployee[]
 }
 
 model TemporaryEmployee {
-  id        Int     @id @default(autoincrement())
-  name      String
-  enrolment String
-  company   Company @relation(fields: [companyId], references: [id])
-  companyId Int
+  id          Int               @id @default(autoincrement())
+  name        String
+  enrolment   EmployeeEnrolment @relation(fields: [enrolmentId], references: [id])
+  enrolmentId Int
+  company     Company           @relation(fields: [companyId], references: [id])
+  companyId   Int
 }
 
 model Receipts {

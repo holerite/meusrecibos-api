@@ -21,18 +21,18 @@ export const getEmployeeSchema = z.object({
 		}),
 });
 
-
 export const createEmployeeSchema = z.object({
 	name: z.string({
-		message: "Nome do colaborador é obrigatório"
+		message: "Nome do colaborador é obrigatório",
 	}),
 	email: z.string({
-		message: "O email do colaborador é obrigatório"
+		message: "O email do colaborador é obrigatório",
 	}),
 	enrolment: z.string({
-		message: "A matrícula do colaborador é obrigatória"
+		message: "A matrícula do colaborador é obrigatória",
 	}),
 	cpf: z.string({
-		message: "O cpf do colaborador é obrigatório"
-	})
-})
+		message: "O cpf do colaborador é obrigatório",
+	}),
+	enrolmentId: z.number().optional(),
+});

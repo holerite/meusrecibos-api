@@ -332,17 +332,17 @@ export async function createReceipt({
 			});
 
 			if (!employeeEnrolment) {
-				await prisma.temporaryEmployee.create({
+				employeeEnrolment = await prisma.employeeEnrolment.create({
 					data: {
-						name: dados[0].employeeName,
 						enrolment: dados[0].enrolment,
 						companyId,
 					},
 				});
 
-				employeeEnrolment = await prisma.employeeEnrolment.create({
+				await prisma.temporaryEmployee.create({
 					data: {
-						enrolment: dados[0].enrolment,
+						name: dados[0].employeeName,
+						enrolmentId: employeeEnrolment.id,
 						companyId,
 					},
 				});
@@ -461,7 +461,12 @@ export async function getErrors(companyId: Company["id"]) {
 		select: {
 			id: true,
 			name: true,
-			enrolment: true,
+			enrolment: {
+				select: {
+					enrolment: true,
+					id: true,
+				},
+			},
 		},
 	});
 }

@@ -107,9 +107,13 @@ export async function createEmployee({
 	email,
 	name,
 	enrolment,
+	enrolmentId,
 	cpf,
 	companyId,
 }: createEmployeeDto) {
+	await prisma
+		.$queryRaw`DELETE FROM EmployeeEnrolment WHERE enrolment = ${enrolment} AND companyId = ${companyId}`;
+
 	await prisma.employee.upsert({
 		where: {
 			cpf,
@@ -127,13 +131,26 @@ export async function createEmployee({
 		},
 		update: {
 			EmployeeEnrolment: {
-				create: {
-					enrolment,
-					companyId,
+				connectOrCreate: {
+					create: {
+						enrolment,
+						companyId,
+					},
+					where: {
+						id: enrolmentId,
+						enrolment,
+					},
 				},
 			},
 		},
 	});
+}
+
+export async function deletePendingEmployee(
+	enrolment: EmployeeEnrolment["enrolment"],
+) {
+	await prisma
+		.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolment = ${enrolment}`;
 }
 
 export async function getByEmail(email: Employee["email"]) {
