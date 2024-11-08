@@ -243,6 +243,8 @@ export async function createReceipt({
 	files,
 	...rest
 }: CreateReceiptDto) {
+	let pendingEmployees = false;
+
 	if (!files) {
 		throw new HTTPException(HTTPCode.BAD_REQUEST, {
 			message: "Arquivos são obrigatórios",
@@ -344,6 +346,8 @@ export async function createReceipt({
 						companyId,
 					},
 				});
+
+				pendingEmployees = true;
 			}
 
 			await prisma.receipts.create({
@@ -358,6 +362,10 @@ export async function createReceipt({
 			});
 		}
 	}
+
+	return {
+		pendingEmployees,
+	};
 }
 
 export async function getTypes(companyId: Company["id"], all?: boolean) {
