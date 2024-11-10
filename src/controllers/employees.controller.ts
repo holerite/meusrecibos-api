@@ -111,46 +111,73 @@ export async function createEmployee({
 	cpf,
 	companyId,
 }: createEmployeeDto) {
-	await prisma
-		.$queryRaw`DELETE FROM EmployeeEnrolment WHERE enrolment = ${enrolment} AND companyId = ${companyId}`;
+	if (enrolmentId) {
+		let employee = await prisma.employee.findUnique({
+			where: {
+				cpf,
+			},
+		});
 
-	await prisma.employee.upsert({
+		if (!employee) {
+			employee = await prisma.employee.create({
+				data: {
+					email,
+					name,
+					cpf,
+				},
+			});
+		}
+
+		await prisma.employeeEnrolment.update({
+			where: {
+				id: enrolmentId,
+			},
+			data: {
+				employeeId: employee.id,
+			},
+		});
+
+		await prisma
+			.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolmentId = ${enrolmentId}`;
+
+		return;
+	}
+
+	let employee = await prisma.employee.findUnique({
 		where: {
 			cpf,
 		},
-		create: {
-			email,
-			name,
-			cpf,
-			EmployeeEnrolment: {
-				create: {
-					enrolment,
-					companyId,
-				},
+	});
+
+	if (!employee) {
+		employee = await prisma.employee.create({
+			data: {
+				email,
+				name,
+				cpf,
 			},
-		},
-		update: {
-			EmployeeEnrolment: {
-				connectOrCreate: {
-					create: {
-						enrolment,
-						companyId,
-					},
-					where: {
-						id: enrolmentId,
-						enrolment,
-					},
-				},
-			},
+		});
+	}
+
+	await prisma.employeeEnrolment.create({
+		data: {
+			enrolment,
+			companyId,
+			employeeId: employee.id,
 		},
 	});
+
+	await prisma
+		.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolmentId = ${enrolment}`;
+
+	return;
 }
 
 export async function deletePendingEmployee(
-	enrolment: EmployeeEnrolment["enrolment"],
+	enrolmentId: EmployeeEnrolment["id"],
 ) {
 	await prisma
-		.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolment = ${enrolment}`;
+		.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolmentId = ${enrolmentId}`;
 }
 
 export async function getByEmail(email: Employee["email"]) {
