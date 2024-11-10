@@ -49,13 +49,6 @@ export async function getReceipts({
 		company: {
 			id: companyId,
 		},
-		enrolment: {
-			employee: {
-				name: {
-					not: undefined,
-				},
-			},
-		},
 	};
 
 	if (filter.paydayFrom && filter.paydayTo) {

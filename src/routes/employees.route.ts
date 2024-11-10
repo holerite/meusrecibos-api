@@ -53,7 +53,6 @@ employeesRoute.post(
         ...employee,
         companyId: companyId,
       });
-      await deletePendingEmployee(employee.enrolment);
 
       return c.json({ message: "Colaborador criado com sucesso" });
     } catch (error) {
