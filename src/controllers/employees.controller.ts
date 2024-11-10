@@ -54,6 +54,7 @@ export async function getEmployees({
 		where: {
 			...filter,
 		},
+
 		include: {
 			EmployeeEnrolment: {
 				where: {
@@ -61,12 +62,19 @@ export async function getEmployees({
 				},
 				select: {
 					enrolment: true,
+					_count: {
+						select: {
+							Receipts: true,
+						},
+					},
 				},
 			},
 		},
 		take: Number(take),
 		skip: Number(take) * Number(page),
 	});
+
+	console.log(JSON.stringify(employees, null, 2));
 
 	const aggregate = await prisma.employee.aggregate({
 		_count: {
@@ -90,6 +98,7 @@ export async function getEmployees({
 				return {
 					enrolment: EmployeeEnrolment[0].enrolment,
 					...employee,
+					receipts: EmployeeEnrolment[0]._count.Receipts,
 				};
 			},
 		),
