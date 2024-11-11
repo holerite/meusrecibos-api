@@ -35,6 +35,7 @@ type GetReceiptsDto = {
 	companyId: Company["id"];
 	isAdmin: boolean;
 	userId: number;
+	enrolment?: string;
 } & GetReceiptsFilterDto;
 
 export async function getReceipts({
@@ -91,9 +92,19 @@ export async function getReceipts({
 			},
 		});
 
-		query.OR = employee.map((e) => ({
-			enrolment: e.enrolment,
-		}));
+		query.enrolment = {
+			enrolment: {
+				in: employee.map((e) => e.enrolment),
+			},
+		};
+	}
+
+	if (filter.enrolment) {
+		query.enrolment = {
+			enrolment: {
+				contains: filter.enrolment,
+			},
+		};
 	}
 
 	const receipts = await prisma.receipts.findMany({

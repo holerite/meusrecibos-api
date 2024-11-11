@@ -6,10 +6,7 @@ import type {
 } from "../types/employee.type";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
-import { Employee, EmployeeEnrolment } from "@prisma/client";
-import { randomUUID } from "crypto";
-import { sign } from "hono/jwt";
-import { addMinutes } from "date-fns";
+import type { Employee, EmployeeEnrolment } from "@prisma/client";
 
 type getEmployeesDto = {
 	companyId: number;
