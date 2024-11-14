@@ -7,6 +7,7 @@ import {
   createReceiptType,
   createReceiptTypeSchema,
   getErrors,
+  getPDFConfig,
   getReceipts,
   getReceiptsFiles,
   getReceiptsFilesSchema,
@@ -123,6 +124,20 @@ app.get("/errors", async (c) => {
     const errors = await getErrors(companyId);
 
     return c.json(errors);
+  } catch (error) {
+    return handleError(c, error);
+  }
+});
+
+app.post("/base", async (c) => {
+  try {
+    const data = await c.req.formData();
+
+    console.log(data);
+
+    await getPDFConfig(data.get("files"));
+
+    return c.json({ message: "Foi" });
   } catch (error) {
     return handleError(c, error);
   }

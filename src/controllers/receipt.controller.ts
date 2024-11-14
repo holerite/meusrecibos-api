@@ -75,7 +75,9 @@ export async function getReceipts({
 	}
 
 	if (!isAdmin) {
-		query.employeeId = userId;
+		query.enrolment = {
+			employeeId: userId,
+		};
 	}
 
 	if (filter.employee) {
@@ -473,4 +475,39 @@ export async function getErrors(companyId: Company["id"]) {
 			},
 		},
 	});
+}
+
+export async function getPDFConfig(files: any) {
+	if (files instanceof File) {
+		files = [files];
+	}
+
+	for (const file of files) {
+		const arrayBuffer = await (file as File).arrayBuffer();
+
+		const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+		const numPages = pdfDoc.getPageCount();
+
+		for (let i = 0; i < numPages; i++) {
+			const newPdfDoc = await PDFDocument.create();
+
+			const [page] = await newPdfDoc.copyPages(pdfDoc, [i]);
+			newPdfDoc.addPage(page);
+
+			const newPdfBytes = await newPdfDoc.save();
+
+			const newBuffeer = Buffer.from(newPdfBytes);
+
+			const data = await pdf(newBuffeer, {
+				pagerender: getPages,
+			});
+
+			const parsed = JSON.parse(
+				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
+			);
+
+			console.log(JSON.stringify(parsed, null, 2));
+		}
+	}
 }
