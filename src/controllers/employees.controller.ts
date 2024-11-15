@@ -149,6 +149,53 @@ export async function createEmployee({
 		return;
 	}
 
+	const usedEnrolment = await prisma.employeeEnrolment.findMany({
+		where: {
+			enrolment,
+			companyId,
+		},
+	});
+
+	if (usedEnrolment.length > 0) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "Matrícula já utilizada",
+		});
+	}
+
+	const existingCPFEmployee = await prisma.employee.findUnique({
+		where: {
+			cpf,
+			EmployeeEnrolment: {
+				some: {
+					companyId,
+				},
+			},
+		},
+	});
+
+	if (existingCPFEmployee) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "CPF já utilizado",
+		});
+	}
+
+	const existingEmailEmployee = await prisma.employee.findUnique({
+		where: {
+			email,
+			EmployeeEnrolment: {
+				some: {
+					companyId,
+				},
+			},
+		},
+	});
+
+	if (existingEmailEmployee) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "Email já utilizado",
+		});
+	}
+
 	let employee = await prisma.employee.findUnique({
 		where: {
 			cpf,
