@@ -133,8 +133,6 @@ app.post("/base", async (c) => {
   try {
     const data = await c.req.formData();
 
-    console.log(data);
-
     await getPDFConfig(data.get("files"));
 
     return c.json({ message: "Foi" });

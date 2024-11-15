@@ -506,8 +506,6 @@ export async function getPDFConfig(files: any) {
 			const parsed = JSON.parse(
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
-
-			console.log(JSON.stringify(parsed, null, 2));
 		}
 	}
 }

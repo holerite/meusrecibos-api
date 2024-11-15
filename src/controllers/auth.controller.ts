@@ -128,8 +128,6 @@ export async function getSystemRoutes(type: "user" | "employee") {
 }
 
 export async function logout(id: number, isAdmin: any) {
-  console.log(id, isAdmin);
-
   if (isAdmin) {
     await prisma.user.update({
       data: {

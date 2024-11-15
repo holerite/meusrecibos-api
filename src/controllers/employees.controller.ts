@@ -71,8 +71,6 @@ export async function getEmployees({
 		skip: Number(take) * Number(page),
 	});
 
-	console.log(JSON.stringify(employees, null, 2));
-
 	const aggregate = await prisma.employee.aggregate({
 		_count: {
 			_all: true,
