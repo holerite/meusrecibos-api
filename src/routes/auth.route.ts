@@ -16,7 +16,7 @@ auth.post("/login", zValidator("json", authValidator.login), async (c) => {
   try {
     const { email } = c.req.valid("json");
 
-    const user = await userController.getByEmail(email);
+    const user = await userController.getUserByEmail(email);
 
     const { pin, token } = await pinController.create(user);
 
@@ -67,7 +67,7 @@ auth.post(
       const { companyId } = c.req.valid("json");
 
       const { email } = c.get("jwtPayload");
-      const user = await userController.getByEmail(email);
+      const user = await userController.getUserByEmail(email);
 
       const result = await authController.login({
         user,

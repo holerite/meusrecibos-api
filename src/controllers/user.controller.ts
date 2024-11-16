@@ -3,7 +3,7 @@ import { prisma } from "../lib/db";
 import { HTTPCode } from "../utils/http";
 import type { Company, User } from "@prisma/client";
 
-export async function getByEmail(email: User["email"]) {
+export async function getUserByEmail(email: User["email"]) {
 	const result = await prisma.user.findUnique({
 		where: {
 			email: email,
