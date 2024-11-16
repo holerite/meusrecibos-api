@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { addUser, deleteUser, getAll } from "../controllers/user.controller";
+import { createUser, deleteUser, getAll } from "../controllers/user.controller";
 import { handleError } from "../utils/error.util";
 import { z } from "zod";
 import { zValidator } from "../middlewares/validator.middleware";
@@ -37,20 +37,20 @@ userRoute.delete("/:id", async (c) => {
 const addUserSchema = z.object({
 	email: z.string(),
 	name: z.string(),
-})
+});
 
 userRoute.post("/", zValidator("json", addUserSchema), async (c) => {
 	try {
-		const { companyId } = c.get("user")
-		const {email, name} = c.req.valid("json");
+		const { companyId } = c.get("user");
+		const { email, name } = c.req.valid("json");
 
-		await addUser(email, name, companyId)
+		await createUser(email, name, companyId);
 		//TODO: Enviar email para o usuário, dizendo que foi cadastrado na empresa
 
-		return c.json({ message: "Usuário vinculado com sucesso" })
+		return c.json({ message: "Usuário vinculado com sucesso" });
 	} catch (e) {
-		return handleError(c, e)
+		return handleError(c, e);
 	}
-})
+});
 
 export default userRoute;

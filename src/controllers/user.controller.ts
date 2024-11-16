@@ -35,9 +35,6 @@ export async function getById(id: User["id"]) {
 	return result;
 }
 
-/**
- * @param companyId
- */
 export async function getAll(companyId: number, userId: User["id"]) {
 	const result = await prisma.user.findMany({
 		where: {
@@ -63,14 +60,6 @@ export async function getAll(companyId: number, userId: User["id"]) {
 	return result;
 }
 
-/**
- *
- * @param companyId
- * ID da empresa
- * @param userId
- * ID do usuário
- * @returns null
- */
 export async function deleteUser(
 	companyId: Company["id"],
 	userId: User["id"],
@@ -90,7 +79,7 @@ export async function deleteUser(
 	return null;
 }
 
-export async function addUser(
+export async function createUser(
 	email: User["email"],
 	name: User["name"],
 	companyId: Company["id"],
@@ -102,18 +91,18 @@ export async function addUser(
 			Companies: {
 				connect: {
 					id: companyId,
-				}
-			}
+				},
+			},
 		},
 		update: {
-			 Companies: {
+			Companies: {
 				connect: {
-					id: companyId
-				}
-			 }
+					id: companyId,
+				},
+			},
 		},
 		where: {
 			email,
-		}
+		},
 	});
 }
