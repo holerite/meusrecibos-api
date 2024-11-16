@@ -98,7 +98,7 @@ auth.post(
 
       const { id } = c.get("user");
 
-      const user = await userController.getById(id);
+      const user = await userController.getUserById(id);
 
       const result = await authController.login({
         user,
