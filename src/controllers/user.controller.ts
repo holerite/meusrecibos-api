@@ -35,7 +35,7 @@ export async function getUserById(id: User["id"]) {
 	return result;
 }
 
-export async function getAll(companyId: number, userId: User["id"]) {
+export async function getAllUsers(companyId: number, userId: User["id"]) {
 	const result = await prisma.user.findMany({
 		where: {
 			Companies: {

@@ -1,6 +1,10 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { createUser, deleteUser, getAll } from "../controllers/user.controller";
+import {
+	createUser,
+	deleteUser,
+	getAllUsers,
+} from "../controllers/user.controller";
 import { handleError } from "../utils/error.util";
 import { z } from "zod";
 import { zValidator } from "../middlewares/validator.middleware";
@@ -13,7 +17,7 @@ userRoute.get("/", async (c) => {
 	try {
 		const { companyId, id } = c.get("user");
 
-		const users = await getAll(companyId, id);
+		const users = await getAllUsers(companyId, id);
 
 		return c.json(users);
 	} catch (e) {
