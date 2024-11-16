@@ -115,6 +115,72 @@ export async function createEmployee({
 	cpf,
 	companyId,
 }: createEmployeeDto) {
+	if (enrolmentId) {
+		const existingCPFEmployee = await prisma.employee.findUnique({
+			where: {
+				cpf,
+				EmployeeEnrolment: {
+					some: {
+						companyId,
+					},
+				},
+			},
+		});
+
+		if (existingCPFEmployee) {
+			throw new HTTPException(HTTPCode.BAD_REQUEST, {
+				message: "CPF já utilizado",
+			});
+		}
+
+		const existingEmailEmployee = await prisma.employee.findUnique({
+			where: {
+				email,
+				EmployeeEnrolment: {
+					some: {
+						companyId,
+					},
+				},
+			},
+		});
+
+		if (existingEmailEmployee) {
+			throw new HTTPException(HTTPCode.BAD_REQUEST, {
+				message: "Email já utilizado",
+			});
+		}
+
+		let employee = await prisma.employee.findUnique({
+			where: {
+				cpf,
+			},
+		});
+
+		if (!employee) {
+			employee = await prisma.employee.create({
+				data: {
+					email,
+					name,
+					cpf,
+				},
+			});
+		}
+
+		await prisma.employeeEnrolment.update({
+			where: {
+				id: enrolmentId,
+			},
+			data: {
+				employeeId: employee.id,
+			},
+		});
+
+		await prisma
+			.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolmentId = ${enrolmentId}`;
+
+		return;
+	}
+
 	const usedEnrolment = await prisma.employeeEnrolment.findMany({
 		where: {
 			enrolment,
@@ -160,38 +226,6 @@ export async function createEmployee({
 		throw new HTTPException(HTTPCode.BAD_REQUEST, {
 			message: "Email já utilizado",
 		});
-	}
-
-	if (enrolmentId) {
-		let employee = await prisma.employee.findUnique({
-			where: {
-				cpf,
-			},
-		});
-
-		if (!employee) {
-			employee = await prisma.employee.create({
-				data: {
-					email,
-					name,
-					cpf,
-				},
-			});
-		}
-
-		await prisma.employeeEnrolment.update({
-			where: {
-				id: enrolmentId,
-			},
-			data: {
-				employeeId: employee.id,
-			},
-		});
-
-		await prisma
-			.$queryRaw`DELETE FROM TemporaryEmployee WHERE enrolmentId = ${enrolmentId}`;
-
-		return;
 	}
 
 	let employee = await prisma.employee.findUnique({
