@@ -1,6 +1,4 @@
-import { HTTPException } from "hono/http-exception";
 import { prisma } from "../lib/db";
-import { HTTPCode } from "../utils/http";
 import type { Company, User } from "@prisma/client";
 
 export async function getUserByEmail(email: User["email"]) {
