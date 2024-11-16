@@ -18,7 +18,7 @@ serve(
 	{
 		fetch: app.fetch,
 		port: Number(process.env.PORT) || 8080,
-		hostname: process.env.ADDRESS || "localhost",
+		hostname: process.env.ADDRESS || "0.0.0.0",
 	},
 	async ({ port, address, family }) => {
 		console.log(

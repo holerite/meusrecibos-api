@@ -4,7 +4,7 @@
 #
 
 app = 'meusrecibos-api'
-primary_region = 'gru'
+primary_region = 'gig'
 
 [build]
 
@@ -17,6 +17,6 @@ primary_region = 'gru'
   processes = ['app']
 
 [[vm]]
-  memory = '512mb'
+  memory = '256MB'
   cpu_kind = 'shared'
   cpus = 1
