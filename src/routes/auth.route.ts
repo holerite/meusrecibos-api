@@ -9,6 +9,8 @@ import * as companyController from "../controllers/companies.controller";
 import * as authController from "../controllers/auth.controller";
 import * as authValidator from "../validators/auth.validator";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import { HTTPException } from "hono/http-exception";
+import { HTTPCode } from "../utils/http";
 
 const auth = new Hono();
 
@@ -17,6 +19,12 @@ auth.post("/login", zValidator("json", authValidator.login), async (c) => {
     const { email } = c.req.valid("json");
 
     const user = await userController.getUserByEmail(email);
+
+    if (user === null) {
+      throw new HTTPException(HTTPCode.NOT_FOUND, {
+        message: "Usuário inválido",
+      });
+    }
 
     const { pin, token } = await pinController.create(user);
 
@@ -69,6 +77,12 @@ auth.post(
       const { email } = c.get("jwtPayload");
       const user = await userController.getUserByEmail(email);
 
+      if (user === null) {
+        throw new HTTPException(HTTPCode.NOT_FOUND, {
+          message: "Usuário inválido",
+        });
+      }
+
       const result = await authController.login({
         user,
         companyId,
@@ -99,6 +113,12 @@ auth.post(
       const { id } = c.get("user");
 
       const user = await userController.getUserById(id);
+
+      if (user === null) {
+        throw new HTTPException(HTTPCode.NOT_FOUND, {
+          message: "Usuário inválido",
+        });
+      }
 
       const result = await authController.login({
         user,

@@ -4,39 +4,23 @@ import { HTTPCode } from "../utils/http";
 import type { Company, User } from "@prisma/client";
 
 export async function getUserByEmail(email: User["email"]) {
-	const result = await prisma.user.findUnique({
+	return await prisma.user.findUnique({
 		where: {
 			email: email,
 		},
 	});
-
-	if (result === null) {
-		throw new HTTPException(HTTPCode.NOT_FOUND, {
-			message: "Usuário inválido",
-		});
-	}
-
-	return result;
 }
 
 export async function getUserById(id: User["id"]) {
-	const result = await prisma.user.findUnique({
+	return await prisma.user.findUnique({
 		where: {
 			id: id,
 		},
 	});
-
-	if (result === null) {
-		throw new HTTPException(HTTPCode.NOT_FOUND, {
-			message: "Usuário inválido",
-		});
-	}
-
-	return result;
 }
 
 export async function getAllUsers(companyId: number, userId: User["id"]) {
-	const result = await prisma.user.findMany({
+	return await prisma.user.findMany({
 		where: {
 			Companies: {
 				some: {
@@ -56,14 +40,12 @@ export async function getAllUsers(companyId: number, userId: User["id"]) {
 			updatedAt: true,
 		},
 	});
-
-	return result;
 }
 
 export async function deleteUser(
 	companyId: Company["id"],
 	userId: User["id"],
-): Promise<null> {
+) {
 	await prisma.user.update({
 		data: {
 			Companies: {
@@ -76,7 +58,6 @@ export async function deleteUser(
 			id: userId,
 		},
 	});
-	return null;
 }
 
 export async function createUser(
