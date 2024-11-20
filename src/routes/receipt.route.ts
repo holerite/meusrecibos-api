@@ -15,6 +15,8 @@ import {
   receiptsFilterSchema,
   updateReceiptType,
   updateTypeSchema,
+  viewReceipt,
+  viewSchema,
 } from "../controllers/receipt.controller";
 import { handleError } from "../utils/error.util";
 
@@ -136,6 +138,19 @@ app.post("/base", async (c) => {
     await getPDFConfig(data.get("files"));
 
     return c.json({ message: "Foi" });
+  } catch (error) {
+    return handleError(c, error);
+  }
+});
+
+app.post("/view", zValidator("json", viewSchema), async (c) => {
+  try {
+    const { companyId } = c.get("user");
+    const { receiptId } = c.req.valid("json");
+
+    await viewReceipt({ companyId, receiptId });
+
+    return c.json({ message: "ok" });
   } catch (error) {
     return handleError(c, error);
   }

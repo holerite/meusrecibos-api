@@ -1,4 +1,4 @@
-import type { Company } from "@prisma/client";
+import type { Company, Employee, Receipts } from "@prisma/client";
 import { prisma } from "../lib/db";
 import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
@@ -439,6 +439,10 @@ export const updateTypeSchema = z.object({
 	active: z.boolean(),
 });
 
+export const viewSchema = z.object({
+	receiptId: z.number(),
+});
+
 type updateReceiptTypeDto = {
 	companyId: Company["id"];
 } & z.infer<typeof updateTypeSchema>;
@@ -473,6 +477,23 @@ export async function getErrors(companyId: Company["id"]) {
 					id: true,
 				},
 			},
+		},
+	});
+}
+
+export async function viewReceipt(
+	{ receiptId, companyId }: {
+		receiptId: Receipts["id"];
+		companyId: number;
+	},
+) {
+	return await prisma.receipts.update({
+		data: {
+			opened: true,
+		},
+		where: {
+			id: receiptId,
+			companyId: companyId,
 		},
 	});
 }
