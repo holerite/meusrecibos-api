@@ -250,6 +250,7 @@ export async function createReceipt({
 	...rest
 }: CreateReceiptDto) {
 	let pendingEmployees = false;
+	let erroredPages = 0;
 
 	if (!files) {
 		throw new HTTPException(HTTPCode.BAD_REQUEST, {
@@ -312,6 +313,11 @@ export async function createReceipt({
 				return dadosPagina;
 			});
 
+			if (dados[0].enrolment === undefined) {
+				erroredPages++;
+				continue;
+			}
+
 			const stream = Readable.from(newBuffeer);
 
 			const params: PutObjectCommandInput = {
@@ -371,6 +377,7 @@ export async function createReceipt({
 
 	return {
 		pendingEmployees,
+		erroredPages,
 	};
 }
 

@@ -29,7 +29,7 @@ app.post("/", zValidator("form", createReceiptSchema), async (c) => {
     const { companyId } = c.get("user");
     const data = c.req.valid("form");
 
-    const { pendingEmployees } = await createReceipt({
+    const { pendingEmployees, erroredPages } = await createReceipt({
       companyId,
       ...data,
     });
@@ -37,6 +37,7 @@ app.post("/", zValidator("form", createReceiptSchema), async (c) => {
     return c.json({
       message: "recibo cadastrado com sucesso",
       pendingEmployees,
+      erroredPages,
     });
   } catch (error) {
     console.log(error);
