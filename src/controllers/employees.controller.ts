@@ -6,7 +6,7 @@ import type {
 } from "../types/employee.type";
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
-import type { Employee, EmployeeEnrolment } from "@prisma/client";
+import type { Company, Employee, EmployeeEnrolment } from "@prisma/client";
 
 type getEmployeesDto = {
 	companyId: number;
@@ -59,6 +59,7 @@ export async function getEmployees({
 				},
 				select: {
 					enrolment: true,
+					employeeId: true,
 					_count: {
 						select: {
 							Receipts: true,
@@ -307,4 +308,55 @@ export async function saveUserToken(refreshToken: string, employee: Employee) {
 			id: employee.id,
 		},
 	});
+}
+
+export async function deleteEmployee(employeeId: Employee["id"], companyId: Company["id"]) {
+
+	const employeeEnrolment = await prisma.employeeEnrolment.findMany({
+		where: {
+			employeeId,
+		}
+	})
+
+	if (employeeEnrolment.length === 0) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "Colaborador não encontrado",
+		});
+	}
+
+	if (employeeEnrolment.length > 1) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "Colaborador não pode ser deletado, entre em contato com o suporte",
+		});
+	}
+
+
+	const receipts = await prisma.receipts.count({
+		where: {
+			enrolmentId: employeeEnrolment[0].id,
+			companyId,
+		},
+	});
+
+
+	if (receipts > 0) {
+		throw new HTTPException(HTTPCode.BAD_REQUEST, {
+			message: "Colaborador não pode ser deletado, pois possui recibos",
+		});
+	}
+
+	await prisma.employeeEnrolment.deleteMany({
+		where: {
+			id: {
+				in: employeeEnrolment.map((enrolment) => enrolment.id),
+			}
+		},
+	});
+
+	await prisma.employee.delete({
+		where: {
+			id: employeeId,
+		}
+	})
+
 }

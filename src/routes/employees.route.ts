@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import {
   createEmployee,
-  deletePendingEmployee,
+  deleteEmployee,
   getByEmail,
   getById,
   getEmployees,
@@ -181,6 +181,22 @@ employeesRoute.get(
 
       const employees = await companyController.getByEmployeeId(id, companyId);
       return c.json(employees, 200);
+    } catch (error) {
+      return handleError(c, error);
+    }
+  },
+);
+
+employeesRoute.delete(
+  "/:employeeId",
+  authMiddleware,
+  async (c) => {
+    try {
+      const { employeeId } = c.req.param();
+
+      await deleteEmployee(Number(employeeId), Number(c.get("user").companyId));
+
+      return c.json({ message: "Colaborador deletado com sucesso" });
     } catch (error) {
       return handleError(c, error);
     }
