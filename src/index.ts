@@ -29,9 +29,9 @@ serve(
 		console.log(`http://localhost:${port}`);
 
 		const isConnected = await verifySMTPConnection();
-      
-      if (!isConnected) {
-        console.error('SMTP connection failed');
-      }
+
+		if (!isConnected) {
+			console.error('SMTP connection failed');
+		}
 	},
 );
