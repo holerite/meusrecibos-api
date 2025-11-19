@@ -6,6 +6,7 @@ import api from "./routes";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { customLogger } from "./middlewares/logger.middleware";
+import { verifySMTPConnection } from "./lib/email";
 
 const app = new Hono();
 
@@ -24,6 +25,13 @@ serve(
 		console.log(
 			`Server is running on ${port} at ${address} with ${family} family`,
 		);
+		console.log(process.env.NODE_ENV);
 		console.log(`http://localhost:${port}`);
+
+		const isConnected = await verifySMTPConnection();
+
+		if (!isConnected) {
+			console.error('SMTP connection failed');
+		}
 	},
 );
