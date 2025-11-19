@@ -3,7 +3,6 @@ declare namespace NodeJS {
 		NODE_ENV: "development" | "production" | "test";
 		TURSO_DATABASE_URL: string;
 		TURSO_AUTH_TOKEN: string;
-
 		EMAIL_USER: string;
 		EMAIL_PASSWORD: string;
 		EMAIL_SMTP: string;
@@ -19,7 +18,6 @@ declare namespace NodeJS {
 		S3_URL: string;
 		S3_BUCKET_NAME: string;
 		S3_BUCKET_DOMAIN: string;
-
 		PORT: string;
 		NODE_ENV: string;
 	}
