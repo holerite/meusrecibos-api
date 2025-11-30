@@ -517,6 +517,8 @@ export async function getPDFConfig(files: any) {
 
 		const numPages = pdfDoc.getPageCount();
 
+		const dados: any[] = [];
+
 		for (let i = 0; i < numPages; i++) {
 			const newPdfDoc = await PDFDocument.create();
 
@@ -534,6 +536,11 @@ export async function getPDFConfig(files: any) {
 			const parsed = JSON.parse(
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
+
+			dados.push(parsed)
 		}
+		console.log(dados[0]);
+
+		return dados
 	}
 }
