@@ -539,7 +539,6 @@ export async function getPDFConfig(files: any) {
 
 			dados.push(parsed)
 		}
-		console.log(dados[0]);
 
 		return dados
 	}

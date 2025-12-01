@@ -136,9 +136,9 @@ app.post("/base", async (c) => {
   try {
     const data = await c.req.formData();
 
-    await getPDFConfig(data.get("files"));
+    const dados = await getPDFConfig(data.get("files"));
 
-    return c.json({ message: "Foi" });
+    return c.json(dados);
   } catch (error) {
     return handleError(c, error);
   }
