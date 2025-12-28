@@ -304,7 +304,7 @@ export async function createReceipt({
 				const dadosPagina = {};
 				pagina.map((val) => {
 					configFile.map((field) => {
-						if (field.x === val.x && field.y === val.y) {
+						if ((field.x === val.x || val.x === field.x2) && field.y === val.y) {
 							dadosPagina[field.value] = val.value;
 						}
 					});
