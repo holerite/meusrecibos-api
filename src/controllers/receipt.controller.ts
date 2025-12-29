@@ -8,11 +8,12 @@ import { PDFDocument } from "pdf-lib";
 import pdf from "pdf-parse";
 import { Buffer } from "node:buffer";
 import { Readable } from "node:stream";
-import { Upload } from "@aws-sdk/lib-storage";
-import type { PutObjectCommandInput } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import process from "node:process";
 import { randomUUID } from "node:crypto";
 import { S3 } from "../lib/s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
 
 export const receiptsFilterSchema = z.object({
 	employee: z.string().optional(),
@@ -193,25 +194,13 @@ export async function getReceiptsFiles(
 		},
 	});
 
-	// const newPdfDoc = await PDFDocument.create()
-	//
-	// for (const receipt of receipts) {
-	// 	const fileBuffer = await fetch(
-	// 		process.env.S3_BUCKET_DOMAIN + receipt.file
-	// 	).then(res => res.arrayBuffer())
-	//
-	// 	const pdfDoc = await PDFDocument.load(fileBuffer)
-	//
-	// 	const [page] = await newPdfDoc.copyPages(pdfDoc, [0])
-	// 	newPdfDoc.addPage(page)
-	// }
-	//
-	// const newPdfBytes = await newPdfDoc.save()
-	//
-	//
-	// const base64 = Buffer.from(newPdfBytes).toString("base64")
+	const saved = await getSignedUrl(
+		S3,
+		new GetObjectCommand({ Bucket: process.env.S3_BUCKET_NAME, Key: receipt.file }),
+		{ expiresIn: 3600 }, // 1 hour
+	)
 
-	return process.env.S3_BUCKET_DOMAIN + receipt.file;
+	return saved
 }
 
 function getPages(pageData) {
@@ -262,6 +251,7 @@ export async function createReceipt({
 		files = [files];
 	}
 
+
 	const config = await prisma.receiptsTypes.findFirstOrThrow({
 		where: {
 			id: Number(type),
@@ -271,8 +261,16 @@ export async function createReceipt({
 		},
 	});
 
+	const saved = await getSignedUrl(
+		S3,
+		new GetObjectCommand({ Bucket: process.env.S3_BUCKET_NAME, Key: config.file }),
+		{ expiresIn: 3600 }, // 1 hour
+	)
+
+	console.log(saved)
+
 	const configFile = await fetch(
-		process.env.S3_BUCKET_DOMAIN + config.file,
+		saved,
 	).then((res) => res.json());
 
 	for (const file of files) {
@@ -304,7 +302,7 @@ export async function createReceipt({
 				const dadosPagina = {};
 				pagina.map((val) => {
 					configFile.map((field) => {
-						if (field.x === val.x && field.y === val.y) {
+						if ((field.x === val.x || val.x === field.x2) && field.y === val.y) {
 							dadosPagina[field.value] = val.value;
 						}
 					});
@@ -318,23 +316,21 @@ export async function createReceipt({
 				continue;
 			}
 
+
 			const stream = Readable.from(newBuffeer);
 
-			const params: PutObjectCommandInput = {
-				Bucket: process.env.S3_BUCKET_NAME,
-				Key: `${randomUUID()}${new Date().getTime()}`,
+			const fileName = `${randomUUID()}${new Date().getTime()}`
+
+			const params = new PutObjectCommand({
+				Bucket: "meusrecibos-dev",
+				Key: fileName,
 				Body: stream,
+				ContentLength: newBuffeer.length,
 				ContentType: "application/pdf",
-			};
 
-			const parallelUploads3 = new Upload({
-				client: S3,
-				queueSize: 4,
-				leavePartsOnError: false,
-				params: params,
-			});
+			})
 
-			const result = await parallelUploads3.done();
+			const result = await S3.send(params)
 
 			let employeeEnrolment = await prisma.employeeEnrolment.findFirst({
 				where: {
@@ -364,7 +360,7 @@ export async function createReceipt({
 
 			await prisma.receipts.create({
 				data: {
-					file: result.Key!,
+					file: fileName,
 					receiptsTypesId: Number(type),
 					companyId,
 					enrolmentId: employeeEnrolment?.id,
