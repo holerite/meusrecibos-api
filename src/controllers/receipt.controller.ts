@@ -298,14 +298,14 @@ export async function createReceipt({
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
 
-			
+
 			const dados = parsed.map((pagina) => {
 				const dadosPagina = {};
 				pagina.map((val) => {
 					configFile.map((field) => {
 						if ((field.x === val.x || val.x === field.x2) && field.y === val.y) {
 							dadosPagina[field.value] = val.value;
-						}
+						} 
 					});
 				});
 
@@ -340,7 +340,7 @@ export async function createReceipt({
 				},
 			});
 
-			if (!employeeEnrolment?.employeeId) {
+			if (!employeeEnrolment) {
 				employeeEnrolment = await prisma.employeeEnrolment.create({
 					data: {
 						enrolment: dados[0].enrolment,
@@ -348,13 +348,26 @@ export async function createReceipt({
 					},
 				});
 
-				await prisma.temporaryEmployee.create({
-					data: {
-						name: dados[0].employeeName,
+
+				const temporaryEmployee = await prisma.temporaryEmployee.findFirst({
+					where: {
 						enrolmentId: employeeEnrolment.id,
 						companyId,
 					},
 				});
+
+				if (!temporaryEmployee) {
+
+					await prisma.temporaryEmployee.create({
+						data: {
+							name: dados[0].employeeName,
+							enrolmentId: employeeEnrolment.id,
+							companyId,
+						},
+					});
+
+
+				}
 
 				pendingEmployees = true;
 			}
