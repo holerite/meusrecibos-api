@@ -267,11 +267,11 @@ export async function createReceipt({
 		{ expiresIn: 3600 }, // 1 hour
 	)
 
-	console.log(saved)
 
 	const configFile = await fetch(
 		saved,
 	).then((res) => res.json());
+
 
 	for (const file of files) {
 		const arrayBuffer = await (file as File).arrayBuffer();
@@ -298,13 +298,14 @@ export async function createReceipt({
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
 
+
 			const dados = parsed.map((pagina) => {
 				const dadosPagina = {};
 				pagina.map((val) => {
 					configFile.map((field) => {
 						if ((field.x === val.x || val.x === field.x2) && field.y === val.y) {
 							dadosPagina[field.value] = val.value;
-						}
+						} 
 					});
 				});
 
@@ -316,13 +317,12 @@ export async function createReceipt({
 				continue;
 			}
 
-
 			const stream = Readable.from(newBuffeer);
 
 			const fileName = `${randomUUID()}${new Date().getTime()}`
 
 			const params = new PutObjectCommand({
-				Bucket: "meusrecibos-dev",
+				Bucket: process.env.S3_BUCKET_NAME,
 				Key: fileName,
 				Body: stream,
 				ContentLength: newBuffeer.length,
@@ -332,12 +332,17 @@ export async function createReceipt({
 
 			const result = await S3.send(params)
 
+
 			let employeeEnrolment = await prisma.employeeEnrolment.findFirst({
 				where: {
 					enrolment: dados[0].enrolment,
 					companyId,
 				},
 			});
+
+			console.log({employeeEnrolment})
+
+			
 
 			if (!employeeEnrolment) {
 				employeeEnrolment = await prisma.employeeEnrolment.create({
@@ -347,13 +352,49 @@ export async function createReceipt({
 					},
 				});
 
-				await prisma.temporaryEmployee.create({
-					data: {
-						name: dados[0].employeeName,
+
+				const temporaryEmployee = await prisma.temporaryEmployee.findFirst({
+					where: {
 						enrolmentId: employeeEnrolment.id,
 						companyId,
 					},
 				});
+
+
+				if (!temporaryEmployee) {
+
+					await prisma.temporaryEmployee.create({
+						data: {
+							name: dados[0].employeeName,
+							enrolmentId: employeeEnrolment.id,
+							companyId,
+						},
+					});
+
+
+				}
+
+				pendingEmployees = true;
+			} else if (!employeeEnrolment.employeeId) {
+				const temporaryEmployee = await prisma.temporaryEmployee.findFirst({
+					where: {
+						enrolmentId: employeeEnrolment.id,
+						companyId,
+					},
+				});
+
+				if (!temporaryEmployee) {
+
+					await prisma.temporaryEmployee.create({
+						data: {
+							name: dados[0].employeeName,
+							enrolmentId: employeeEnrolment.id,
+							companyId,
+						},
+					});
+
+
+				}
 
 				pendingEmployees = true;
 			}
