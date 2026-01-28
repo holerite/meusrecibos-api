@@ -267,11 +267,11 @@ export async function createReceipt({
 		{ expiresIn: 3600 }, // 1 hour
 	)
 
-	console.log(saved)
 
 	const configFile = await fetch(
 		saved,
 	).then((res) => res.json());
+
 
 	for (const file of files) {
 		const arrayBuffer = await (file as File).arrayBuffer();
@@ -298,6 +298,7 @@ export async function createReceipt({
 				`[${data.text}]`.replaceAll("\n\n", ",").replace(",", ""),
 			);
 
+			
 			const dados = parsed.map((pagina) => {
 				const dadosPagina = {};
 				pagina.map((val) => {
@@ -316,13 +317,12 @@ export async function createReceipt({
 				continue;
 			}
 
-
 			const stream = Readable.from(newBuffeer);
 
 			const fileName = `${randomUUID()}${new Date().getTime()}`
 
 			const params = new PutObjectCommand({
-				Bucket: "meusrecibos-dev",
+				Bucket: process.env.S3_BUCKET_NAME,
 				Key: fileName,
 				Body: stream,
 				ContentLength: newBuffeer.length,
@@ -332,6 +332,7 @@ export async function createReceipt({
 
 			const result = await S3.send(params)
 
+
 			let employeeEnrolment = await prisma.employeeEnrolment.findFirst({
 				where: {
 					enrolment: dados[0].enrolment,
@@ -339,7 +340,7 @@ export async function createReceipt({
 				},
 			});
 
-			if (!employeeEnrolment) {
+			if (!employeeEnrolment?.employeeId) {
 				employeeEnrolment = await prisma.employeeEnrolment.create({
 					data: {
 						enrolment: dados[0].enrolment,
