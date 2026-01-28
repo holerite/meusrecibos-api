@@ -340,6 +340,10 @@ export async function createReceipt({
 				},
 			});
 
+			console.log({employeeEnrolment})
+
+			
+
 			if (!employeeEnrolment) {
 				employeeEnrolment = await prisma.employeeEnrolment.create({
 					data: {
@@ -349,6 +353,29 @@ export async function createReceipt({
 				});
 
 
+				const temporaryEmployee = await prisma.temporaryEmployee.findFirst({
+					where: {
+						enrolmentId: employeeEnrolment.id,
+						companyId,
+					},
+				});
+
+
+				if (!temporaryEmployee) {
+
+					await prisma.temporaryEmployee.create({
+						data: {
+							name: dados[0].employeeName,
+							enrolmentId: employeeEnrolment.id,
+							companyId,
+						},
+					});
+
+
+				}
+
+				pendingEmployees = true;
+			} else if (!employeeEnrolment.employeeId) {
 				const temporaryEmployee = await prisma.temporaryEmployee.findFirst({
 					where: {
 						enrolmentId: employeeEnrolment.id,
