@@ -15,6 +15,7 @@
     "@libsql/client": "^0.12.0",
     "@prisma/adapter-libsql": "^5.20.0",
     "@prisma/client": "5.20.0",
+    "@tigrisdata/storage": "^2.15.5",
     "bcrypt": "^5.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",

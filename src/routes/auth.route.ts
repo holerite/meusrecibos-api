@@ -45,6 +45,7 @@ auth.post(
   zValidator("json", authValidator.signIn),
   jwt({
     secret: process.env.JWT_SECRET,
+    alg: "HS256",
   }),
   async (c) => {
     try {
@@ -69,6 +70,7 @@ auth.post(
   zValidator("json", authValidator.company),
   jwt({
     secret: process.env.JWT_SECRET,
+    alg: "HS256",
   }),
   async (c) => {
     try {
