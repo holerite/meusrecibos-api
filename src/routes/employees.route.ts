@@ -90,6 +90,7 @@ employeesRoute.post(
   zValidator("json", authValidator.signIn),
   jwt({
     secret: process.env.JWT_SECRET,
+    alg: "HS256",
   }),
   async (c) => {
     try {
@@ -114,6 +115,7 @@ employeesRoute.post(
   zValidator("json", authValidator.company),
   jwt({
     secret: process.env.JWT_SECRET,
+    alg: "HS256",
   }),
   async (c) => {
     try {

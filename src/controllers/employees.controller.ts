@@ -7,6 +7,7 @@ import type {
 import { HTTPException } from "hono/http-exception";
 import { HTTPCode } from "../utils/http";
 import type { Company, Employee, EmployeeEnrolment } from "@prisma/client";
+import { remove } from '@tigrisdata/storage'
 
 type getEmployeesDto = {
 	companyId: number;
@@ -331,7 +332,7 @@ export async function deleteEmployee(employeeId: Employee["id"], companyId: Comp
 	}
 
 
-	const receipts = await prisma.receipts.count({
+	const receipts = await prisma.receipts.findMany({
 		where: {
 			enrolmentId: employeeEnrolment[0].id,
 			companyId,
@@ -339,10 +340,20 @@ export async function deleteEmployee(employeeId: Employee["id"], companyId: Comp
 	});
 
 
-	if (receipts > 0) {
-		throw new HTTPException(HTTPCode.BAD_REQUEST, {
-			message: "Colaborador não pode ser deletado, pois possui recibos",
-		});
+	if (receipts.length > 0) {
+
+		const removePromisses = receipts.map((receipt) => {
+			return remove(receipt.file)
+		})
+		try {
+			const result = await Promise.all(removePromisses)
+			console.log({ result })
+		} catch (error) {
+			console.log(error)
+			throw new HTTPException(HTTPCode.BAD_REQUEST, {
+				message: "Colaborador não pode ser deletado, tente novamente",
+			});
+		}
 	}
 
 	await prisma.employeeEnrolment.deleteMany({

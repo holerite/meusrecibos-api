@@ -166,6 +166,7 @@ export async function refreshToken({
     const payload = (await jwt.verify(
       refreshToken,
       REFRESH_TOKEN_SECRET,
+      "HS256",
     )) as TokenPayload;
 
     // biome-ignore lint/style/noNonNullAssertion: <explanation>

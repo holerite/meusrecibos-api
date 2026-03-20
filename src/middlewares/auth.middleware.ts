@@ -16,6 +16,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
 		const payload = (await verify(
 			token,
 			process.env.ACCESS_TOKEN_SECRET,
+			"HS256",
 		)) as UserPayload;
 		c.set("user", payload);
 	} catch (error) {
