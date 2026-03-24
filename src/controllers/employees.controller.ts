@@ -339,15 +339,21 @@ export async function deleteEmployee(employeeId: Employee["id"], companyId: Comp
 		},
 	});
 
-
 	if (receipts.length > 0) {
 
 		const removePromisses = receipts.map((receipt) => {
 			return remove(receipt.file)
 		})
+
 		try {
-			const result = await Promise.all(removePromisses)
-			console.log({ result })
+			await Promise.all(removePromisses)
+
+			await prisma.receipts.deleteMany({
+				where: {
+					enrolmentId: employeeEnrolment[0].id,
+					companyId,
+				},
+			})
 		} catch (error) {
 			console.log(error)
 			throw new HTTPException(HTTPCode.BAD_REQUEST, {
